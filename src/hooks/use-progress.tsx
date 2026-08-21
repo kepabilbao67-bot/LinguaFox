@@ -12,7 +12,9 @@ const DEFAULT_PROGRESS: ProgressState = {
   estrellas: 0,
   mejorPuntuacionPorLeccion: {},
   mejoresEstrellasPorLeccion: {},
-  idioma: 'en',
+  idiomaNativo: 'es',
+  idiomaObjetivo: 'en',
+  nivelObjetivo: 'A1',
   ajustes: {
     darkMode: true,
     soundEnabled: true,
@@ -35,7 +37,7 @@ interface ProgressContextValue {
   setLessonProgress: (lessonId: string, cardIndex: number) => void;
   recordQuizResult: (lessonId: string, score: number, total: number) => void;
   registerCharacterInteraction: (characterId: string, type: 'chat' | 'call') => void;
-  setLanguage: (language: LanguageCode) => void;
+  setLanguages: (nativo: LanguageCode, objetivo: LanguageCode) => void;
   resetProgress: () => void;
   latestAchievementId: string | null;
   completeOnboarding: () => void;
@@ -90,13 +92,29 @@ function sanitizeProgress(value: unknown): ProgressState {
   const bestStars = sanitizeStarsRecord(value.mejoresEstrellasPorLeccion);
   const characterStars = sanitizeStarsRecord(value.estrellasPersonajesPorId);
 
+  let nativo = typeof value.idiomaNativo === 'string' ? (value.idiomaNativo as LanguageCode) : undefined;
+  let objetivo = typeof value.idiomaObjetivo === 'string' ? (value.idiomaObjetivo as LanguageCode) : undefined;
+
+  if (!nativo || !objetivo) {
+    if (typeof value.idioma === 'string') {
+      const oldIdioma = value.idioma as LanguageCode;
+      nativo = 'es';
+      objetivo = (oldIdioma === 'en' || oldIdioma === 'fr') ? oldIdioma : 'en';
+    } else {
+      nativo = nativo ?? DEFAULT_PROGRESS.idiomaNativo;
+      objetivo = objetivo ?? DEFAULT_PROGRESS.idiomaObjetivo;
+    }
+  }
+
   return {
     leccionesCompletadas: completed,
     // El total se deriva de los máximos por lección para impedir duplicados.
     estrellas: getGlobalStars(bestStars, characterStars),
     mejorPuntuacionPorLeccion: sanitizeNumberRecord(value.mejorPuntuacionPorLeccion),
     mejoresEstrellasPorLeccion: bestStars,
-    idioma: value.idioma === 'en' || value.idioma === 'fr' ? value.idioma : DEFAULT_PROGRESS.idioma,
+    idiomaNativo: nativo,
+    idiomaObjetivo: objetivo,
+    nivelObjetivo: typeof value.nivelObjetivo === 'string' ? (value.nivelObjetivo as any) : DEFAULT_PROGRESS.nivelObjetivo,
     ajustes: {
       darkMode:
         typeof settings.darkMode === 'boolean'
@@ -258,8 +276,8 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
     [],
   );
 
-  const setLanguage = useCallback((language: LanguageCode) => {
-    setProgress((current) => ({ ...current, idioma: language }));
+  const setLanguages = useCallback((nativo: LanguageCode, objetivo: LanguageCode) => {
+    setProgress((current) => ({ ...current, idiomaNativo: nativo, idiomaObjetivo: objetivo }));
   }, []);
 
   const resetProgress = useCallback(() => setProgress(DEFAULT_PROGRESS), []);
@@ -272,7 +290,7 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
       setLessonProgress,
       recordQuizResult,
       registerCharacterInteraction,
-      setLanguage,
+      setLanguages,
       resetProgress,
     }),
     [
@@ -283,7 +301,7 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
       recordQuizResult,
       registerCharacterInteraction,
       resetProgress,
-      setLanguage,
+      setLanguages,
       setLessonProgress,
     ],
   );

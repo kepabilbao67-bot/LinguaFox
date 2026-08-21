@@ -51,7 +51,7 @@ const FRENCH_LESSONS: readonly Lesson[] = [
   { id: 'viajes', title: 'Viajes', description: 'Vocabulario para moverte por el mundo', language: 'fr', words: [{id:'aeroport',source:'aéroport',translation:'aeropuerto'},{id:'billet',source:'billet',translation:'billete'},{id:'train',source:'train',translation:'tren'},{id:'plage',source:'plage',translation:'playa'},{id:'carte',source:'carte',translation:'mapa'},{id:'valise',source:'valise',translation:'maleta'}] },
 ] as const;
 
-export const LESSONS_BY_LANGUAGE: Readonly<Record<LanguageCode, readonly Lesson[]>> = { en: ENGLISH_LESSONS, fr: FRENCH_LESSONS };
+export const LESSONS_BY_LANGUAGE: Readonly<Record<LanguageCode, readonly Lesson[]>> = { en: ENGLISH_LESSONS, fr: FRENCH_LESSONS, es: [], it: [], de: [], pt: [] };
 export const LESSONS: readonly Lesson[] = [...ENGLISH_LESSONS, ...FRENCH_LESSONS];
 
 export function getLessonById(id: string | undefined, language: LanguageCode = 'en'): Lesson | undefined {

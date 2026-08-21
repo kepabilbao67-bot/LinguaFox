@@ -15,12 +15,12 @@ export function HomeScreen() {
   const { progress, isHydrated, latestAchievementId } = useProgress();
   const [toast, setToast] = useState<string | null>(null);
   useEffect(()=>{if(!latestAchievementId)return;const title=ACHIEVEMENTS.find(a=>a.id===latestAchievementId)?.titulo;const timer=setTimeout(()=>{setToast(title ?? null);setTimeout(()=>setToast(null),3500);},0);return()=>clearTimeout(timer);},[latestAchievementId]);
-  const lessons = getLessonsByLanguage(progress.idioma);
+  const lessons = getLessonsByLanguage(progress.idiomaObjetivo);
 
   return (
     <ScreenContainer title="LinguaFox" isLoading={!isHydrated}>
       <Text style={styles.subtitle}>Aprende inglés paso a paso</Text>
-      <Pressable style={styles.languageButton} onPress={() => router.push('/language')}><Text style={styles.languageText}>{progress.idioma === 'fr' ? '🇫🇷 Francés' : '🇬🇧 Inglés'} · Cambiar</Text></Pressable>
+      <Pressable style={styles.languageButton} onPress={() => router.push('/language')}><Text style={styles.languageText}>{progress.idiomaObjetivo === 'fr' ? '🇫🇷 Francés' : progress.idiomaObjetivo === 'es' ? '🇪🇸 Español' : progress.idiomaObjetivo === 'it' ? '🇮🇹 Italiano' : progress.idiomaObjetivo === 'de' ? '🇩🇪 Alemán' : progress.idiomaObjetivo === 'pt' ? '🇵🇹 Portugués' : '🇬🇧 Inglés'} · Cambiar</Text></Pressable>
       <View style={styles.starsSummary} accessibilityLabel={`${progress.estrellas} estrellas totales`}>
         <Text style={styles.starsIcon}>★</Text>
         <View>

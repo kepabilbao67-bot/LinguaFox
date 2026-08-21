@@ -20,7 +20,7 @@ export default function ResultRoute() {
 
   return (
     <ResultScreen
-      lesson={getLessonById(lessonId, progress.idioma)}
+      lesson={getLessonById(lessonId, progress.idiomaObjetivo)}
       score={parseNonNegativeInteger(score)}
       total={parseNonNegativeInteger(total)}
     />

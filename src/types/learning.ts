@@ -1,4 +1,6 @@
-export type LanguageCode = 'en' | 'fr';
+export type LanguageCode = 'en' | 'es' | 'fr' | 'it' | 'de' | 'pt';
+
+export type CEFRLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
 
 export type Screen = 'home' | 'lesson' | 'quiz' | 'result';
 
@@ -13,6 +15,7 @@ export interface Lesson {
   title: string;
   description: string;
   language: LanguageCode;
+  level?: CEFRLevel;
   words: readonly Word[];
 }
 
@@ -31,7 +34,9 @@ export interface ProgressState {
   estrellas: number;
   mejorPuntuacionPorLeccion: Record<string, number>;
   mejoresEstrellasPorLeccion: Record<string, number>;
-  idioma: LanguageCode;
+  idiomaNativo: LanguageCode;
+  idiomaObjetivo: LanguageCode;
+  nivelObjetivo?: CEFRLevel;
   ajustes: AppSettings;
   progresoPorLeccion: Record<string, number>;
   estrellasPersonajesPorId: Record<string, number>;
