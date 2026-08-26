@@ -23,6 +23,8 @@
       "package": "com.kepabilbao.linguafox"
     },
     "web": {
+      "bundler": "metro",
+      "output": "server",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
