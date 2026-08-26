@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Pressable, StyleSheet, Text, View, AccessibilityInfo } from 'react-native';
 
 import { EmptyState } from '@/components/empty-state';
 import { ScreenContainer } from '@/components/screen-container';
@@ -79,12 +79,19 @@ function HydratedResult({ lesson, score, total }: HydratedResultProps) {
   useEffect(() => {
     // El registro es idempotente: solo conserva máximos por lección.
     recordQuizResult(getProgressKey(lesson.language, lesson.id), score, total);
-    Animated.spring(rewardAnimation, {
-      toValue: 1,
-      friction: 5,
-      tension: 70,
-      useNativeDriver: true,
-    }).start();
+    
+    AccessibilityInfo.isReduceMotionEnabled().then((reduced) => {
+      if (reduced) {
+        rewardAnimation.setValue(1);
+      } else {
+        Animated.spring(rewardAnimation, {
+          toValue: 1,
+          friction: 5,
+          tension: 70,
+          useNativeDriver: true,
+        }).start();
+      }
+    });
   }, [lesson.id, lesson.language, recordQuizResult, rewardAnimation, score, total]);
 
   const verdict =
@@ -158,7 +165,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: AppColors.border,
+    borderColor: AppColors.surfaceRaised,
   },
   educationalTitle: { color: AppColors.text, fontSize: 16, fontWeight: '800', textAlign: 'center', marginBottom: 6 },
   educationalScore: { color: AppColors.primary, fontSize: 28, fontWeight: '900', textAlign: 'center', marginBottom: 12 },
