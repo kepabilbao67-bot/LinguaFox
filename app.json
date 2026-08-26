@@ -20,7 +20,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png",
         "backgroundColor": "#FFFFFF"
       },
-      "package": "com.kepabilbao.linguafox"
+      "package": "com.kepabilbao.linguafox",
+      "versionCode": 1
     },
     "web": {
       "bundler": "metro",
