@@ -1,11 +1,17 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import * as SplashScreen from 'expo-splash-screen';
 
 import type { LanguageCode, ProgressState } from '@/types/learning';
 import { calculateQuizStars } from '@/utils/rewards';
 import { evaluateAchievements } from '@/data/achievements';
 import { calculateNewStreak } from '@/utils/streak-logic';
 import { safeLoadProgress, sanitizeProgress, DEFAULT_PROGRESS, STORAGE_KEY, getGlobalStars } from '@/utils/progress-storage';
+
+// Keep the splash screen visible while we fetch resources
+SplashScreen.preventAutoHideAsync().catch(() => {
+  /* reloading the app might trigger some race conditions, ignore them */
+});
 
 interface ProgressContextValue {
   progress: ProgressState;
@@ -51,7 +57,10 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
         isBlockedFromSaving.current = true;
         console.warn('Error crítico inesperado al cargar progreso.', error);
       } finally {
-        if (isMounted) setIsHydrated(true);
+        if (isMounted) {
+          setIsHydrated(true);
+          SplashScreen.hideAsync().catch(() => {});
+        }
       }
     }
 
