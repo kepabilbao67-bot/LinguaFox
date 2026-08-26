@@ -50,9 +50,9 @@ export function ChatScreen() {
         appendMessage(createMessage('tutor', reply.text, reply.correction));
         setSuggestions(reply.suggestions);
       } catch (error: unknown) {
-        console.warn('No se pudo obtener la respuesta del tutor.', error);
+        if (__DEV__) console.warn('No se pudo obtener la respuesta del tutor.', error instanceof Error ? error.name : 'Unknown');
         appendMessage(
-          createMessage('tutor', 'Sorry, I had a small problem. Please try again in a moment.'),
+          createMessage('tutor', 'El tutor está temporalmente no disponible. Inténtalo de nuevo en unos minutos.')
         );
       } finally {
         setIsSending(false);
