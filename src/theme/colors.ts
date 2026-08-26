@@ -1,2 +1,13 @@
-export const lightColors={background:'#F5FFF7',surface:'#FFFFFF',surfaceRaised:'#E5F7E9',primary:'#16803C',primaryBright:'#0F6B32',accent:'#C87900',text:'#102019',textMuted:'#526258',success:'#267A44',danger:'#A62B2B',disabled:'#A5B1A8'} as const;
-export const darkColors={background:'#0B1120',surface:'#151D31',surfaceRaised:'#1F2A44',primary:'#16A34A',primaryBright:'#4ADE80',accent:'#F59E0B',text:'#FFFFFF',textMuted:'#9CA3AF',success:'#14532D',danger:'#7F1D1D',disabled:'#374151'} as const;
+export const colors = {
+  background: '#121212',
+  surface: 'rgba(255, 255, 255, 0.05)', // Glassmorphism base
+  surfaceBorder: 'rgba(255, 255, 255, 0.1)',
+  text: '#FFFFFF',
+  textSecondary: '#A0A0A0',
+  primary: '#FF6B00',   // Naranja vibrante
+  secondary: '#9D00FF', // Púrpura profundo
+  success: '#00E676',
+  warning: '#FFC107',
+  error: '#FF3D00',
+  white: '#FFFFFF',
+};
