@@ -12,7 +12,7 @@ function replyForCharacter(character: Character, text: string, correction?: Chat
   const simple = character.difficulty === 'facil';
   const intro = correction ? 'Oops, good try! ' : '';
   const prompts: Record<string, { text: string; suggestions: readonly string[] }> = {
-    trepamuros: { text: `${intro}Great move! What do you like to do in your city?`, suggestions: ['I like walking in the city.', 'I go to the park.', 'I like adventures.'] },
+    'buho-sabio': { text: `${intro}Great thinking! What do you like to do at night?`, suggestions: ['I like reading books.', 'I go to sleep early.', 'I look at the stars.'] },
     'leyenda-balon': { text: `${intro}Nice teamwork! What sport do you enjoy?`, suggestions: ['I like basketball.', 'I play with my friends.', 'I watch sports.'] },
     'chef-viajero': { text: `${intro}Delicious answer! What is your favorite food?`, suggestions: ['I like pizza.', 'My favorite food is pasta.', 'I like cooking.'] },
     astronauta: { text: `${intro}Excellent mission report. What would you like to discover in space?`, suggestions: ['I want to see the Moon.', 'I like stars.', 'Space is interesting.'] },
