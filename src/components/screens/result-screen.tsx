@@ -9,6 +9,7 @@ import { getProgressKey } from '@/data/lessons';
 import { useProgress } from '@/hooks/use-progress';
 import type { Lesson, QuizReward } from '@/types/learning';
 import { calculateQuizStars } from '@/utils/rewards';
+import { calculateEducationalScore } from '@/utils/evaluation';
 
 interface ResultScreenProps {
   lesson: Lesson | undefined;
@@ -66,6 +67,15 @@ function HydratedResult({ lesson, score, total }: HydratedResultProps) {
   });
   const [rewardAnimation] = useState(() => new Animated.Value(0));
 
+  // Compute Educational Score
+  const dimensions = {
+    comprehension: { evaluated: true, earned: score, max: total },
+    vocabulary: { evaluated: true, earned: score, max: total },
+    pronunciation: { evaluated: false, earned: 0, max: 1 },
+    fluency: { evaluated: false, earned: 0, max: 1 },
+  };
+  const eduScore = calculateEducationalScore(dimensions as any);
+
   useEffect(() => {
     // El registro es idempotente: solo conserva máximos por lección.
     recordQuizResult(getProgressKey(lesson.language, lesson.id), score, total);
@@ -88,6 +98,20 @@ function HydratedResult({ lesson, score, total }: HydratedResultProps) {
           {score}/{total}
         </Text>
         <Text style={styles.verdict}>{verdict}</Text>
+
+        <View style={styles.educationalBox}>
+          <Text style={styles.educationalTitle}>Puntuación Educativa</Text>
+          <Text style={styles.educationalScore}>{eduScore} / 100</Text>
+          <View style={styles.dimensionRow}>
+            <Text style={styles.dimensionLabel}>Comprensión y Vocabulario:</Text>
+            <Text style={styles.dimensionValue}>Evaluada</Text>
+          </View>
+          <View style={styles.dimensionRow}>
+            <Text style={styles.dimensionLabel}>Pronunciación y Fluidez:</Text>
+            <Text style={styles.dimensionValueDimmed}>No evaluada</Text>
+          </View>
+        </View>
+
         <Animated.View
           style={[
             styles.rewardBox,
@@ -110,6 +134,7 @@ function HydratedResult({ lesson, score, total }: HydratedResultProps) {
             Mejor marca: {reward.mejorPuntuacion}/{total} · Total: {reward.totalEstrellas} ★
           </Text>
         </Animated.View>
+
         <Pressable style={styles.button} onPress={() => router.replace(`/quiz/${lesson.id}`)}>
           <Text style={styles.buttonText}>Repetir quiz</Text>
         </Pressable>
@@ -126,6 +151,21 @@ const styles = StyleSheet.create({
   lesson: { color: AppColors.textMuted, fontSize: 17, fontWeight: '700' },
   score: { color: AppColors.text, fontSize: 48, fontWeight: '900', marginTop: 12 },
   verdict: { color: AppColors.primaryBright, fontSize: 20, fontWeight: '800', marginBottom: 22 },
+  educationalBox: {
+    width: '100%',
+    backgroundColor: AppColors.surfaceRaised,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+  },
+  educationalTitle: { color: AppColors.text, fontSize: 16, fontWeight: '800', textAlign: 'center', marginBottom: 6 },
+  educationalScore: { color: AppColors.primary, fontSize: 28, fontWeight: '900', textAlign: 'center', marginBottom: 12 },
+  dimensionRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
+  dimensionLabel: { color: AppColors.text, fontSize: 14 },
+  dimensionValue: { color: AppColors.success, fontSize: 14, fontWeight: '700' },
+  dimensionValueDimmed: { color: AppColors.textMuted, fontSize: 14, fontStyle: 'italic' },
   rewardBox: {
     width: '100%',
     backgroundColor: AppColors.surfaceRaised,

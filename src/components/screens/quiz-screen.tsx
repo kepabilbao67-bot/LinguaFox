@@ -1,13 +1,15 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
 
 import { EmptyState } from '@/components/empty-state';
 import { ScreenContainer } from '@/components/screen-container';
+import { ErrorExplanationCard } from '@/components/ErrorExplanationCard';
 import { AppColors } from '@/constants/app-theme';
 import { useQuiz } from '@/hooks/use-quiz';
 import { speakText } from '@/services/speech';
 import type { Lesson } from '@/types/learning';
+import type { PedagogicalCorrection } from '@/types/pedagogical-correction';
 
 interface QuizScreenProps {
   lesson: Lesson | undefined;
@@ -49,66 +51,99 @@ export function QuizScreen({ lesson }: QuizScreenProps) {
   }
 
   const question = quiz.currentQuestion;
+  const isAnswered = quiz.selectedAnswer !== null;
+  const isCorrect = isAnswered && quiz.selectedAnswer === question.translation;
+
+  // Generate correction if answered wrongly
+  const correction: PedagogicalCorrection | null = isAnswered && !isCorrect ? {
+    errorDetectado: quiz.selectedAnswer!,
+    tipoError: 'vocabulario',
+    correccion: question.translation,
+    explicacionPorQue: `Has seleccionado "${quiz.selectedAnswer}", pero la palabra para "${question.source}" es "${question.translation}".`,
+    explicacionComo: `Asocia "${question.source}" directamente con "${question.translation}".`,
+    explicacionCuando: `Utiliza esta palabra cuando te refieras a "${question.translation}" en conversaciones.`,
+    ejemplos: [
+      `La palabra correcta es: ${question.translation}`,
+    ],
+    ejercicioComprobacion: `Intenta recordar que ${question.source} = ${question.translation}.`,
+    idiomaExplicacion: 'es',
+    gravedad: 'menor',
+    confianza: 'high',
+    debeInterrumpir: true,
+    textoParaVoz: `Recuerda, ${question.source} significa ${question.translation}.`,
+  } : null;
 
   return (
     <ScreenContainer title={`Quiz · ${lesson.title}`}>
-      <View style={styles.headerRow}>
-        <Text style={styles.meta}>
-          Pregunta {quiz.questionIndex + 1}/{quiz.questions.length}
-        </Text>
-        <Text style={styles.meta}>Aciertos: {quiz.score}</Text>
-      </View>
-      <View style={styles.card}>
-        <Text style={styles.prompt}>¿Qué significa?</Text>
-        <Text style={styles.word}>{question.source}</Text>
-        <Pressable
-          style={styles.listenButton}
-          onPress={() => setAudioFeedback(speakText(question.source, { language: lesson.language === 'fr' ? 'fr-FR' : 'en-US' }) ? 'Escuchando palabra.' : 'Audio no disponible ahora.') }>
-          <Text style={styles.listenText}>🔊 Escuchar</Text>
-        </Pressable>
-      </View>
-      {audioFeedback ? <Text style={styles.audioFeedback}>{audioFeedback}</Text> : null}
-      {question.options.map((option) => {
-        const isAnswered = quiz.selectedAnswer !== null;
-        const isCorrect = option === question.translation;
-        const isSelected = option === quiz.selectedAnswer;
-        const backgroundColor = isAnswered
-          ? isCorrect
-            ? AppColors.success
-            : isSelected
-              ? AppColors.danger
-              : AppColors.surfaceRaised
-          : AppColors.surfaceRaised;
-
-        return (
-          <Pressable
-            key={option}
-            disabled={isAnswered}
-            style={({ pressed }) => [
-              styles.option,
-              { backgroundColor },
-              pressed && !isAnswered && styles.pressed,
-            ]}
-            onPress={() => quiz.answer(option)}>
-            <Text style={styles.optionText}>{option}</Text>
-          </Pressable>
-        );
-      })}
-      {quiz.selectedAnswer ? (
-        <Pressable style={styles.nextButton} onPress={quiz.next}>
-          <Text style={styles.nextText}>
-            {quiz.questionIndex + 1 === quiz.questions.length ? 'Ver resultado' : 'Siguiente'}
+      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+        <View style={styles.headerRow}>
+          <Text style={styles.meta}>
+            Pregunta {quiz.questionIndex + 1}/{quiz.questions.length}
           </Text>
+          <Text style={styles.meta}>Aciertos: {quiz.score}</Text>
+        </View>
+        <View style={styles.card}>
+          <Text style={styles.prompt}>¿Qué significa?</Text>
+          <Text style={styles.word}>{question.source}</Text>
+          <Pressable
+            style={styles.listenButton}
+            onPress={() => setAudioFeedback(speakText(question.source, { language: lesson.language === 'fr' ? 'fr-FR' : 'en-US' }) ? 'Escuchando palabra.' : 'Audio no disponible ahora.') }>
+            <Text style={styles.listenText}>🔊 Escuchar</Text>
+          </Pressable>
+        </View>
+        {audioFeedback ? <Text style={styles.audioFeedback}>{audioFeedback}</Text> : null}
+
+        {question.options.map((option) => {
+          const isOptionCorrect = option === question.translation;
+          const isSelected = option === quiz.selectedAnswer;
+          const backgroundColor = isAnswered
+            ? isOptionCorrect
+              ? AppColors.success
+              : isSelected
+                ? AppColors.danger
+                : AppColors.surfaceRaised
+            : AppColors.surfaceRaised;
+
+          return (
+            <Pressable
+              key={option}
+              disabled={isAnswered}
+              style={({ pressed }) => [
+                styles.option,
+                { backgroundColor },
+                pressed && !isAnswered && styles.pressed,
+              ]}
+              onPress={() => quiz.answer(option)}>
+              <Text style={styles.optionText}>{option}</Text>
+            </Pressable>
+          );
+        })}
+
+        {correction && (
+          <ErrorExplanationCard 
+            correction={correction} 
+            onPlayAudio={() => speakText(correction.textoParaVoz, { language: 'es-ES' })}
+          />
+        )}
+
+        {isAnswered ? (
+          <Pressable style={styles.nextButton} onPress={quiz.next}>
+            <Text style={styles.nextText}>
+              {quiz.questionIndex + 1 === quiz.questions.length ? 'Ver resultado' : 'Siguiente'}
+            </Text>
+          </Pressable>
+        ) : null}
+        
+        <Pressable style={styles.backButton} onPress={() => router.back()}>
+          <Text style={styles.backText}>Abandonar quiz</Text>
         </Pressable>
-      ) : null}
-      <Pressable style={styles.backButton} onPress={() => router.back()}>
-        <Text style={styles.backText}>Abandonar quiz</Text>
-      </Pressable>
+      </ScrollView>
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollContainer: { paddingBottom: 40 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
   meta: { color: AppColors.textMuted, fontWeight: '600' },
   card: {
@@ -130,10 +165,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     paddingVertical: 14,
-    marginTop: 4,
+    marginTop: 16,
   },
   nextText: { color: AppColors.text, fontWeight: '800' },
   pressed: { opacity: 0.78 },
-  backButton: { alignItems: 'center', paddingVertical: 16 },
+  backButton: { alignItems: 'center', paddingVertical: 16, marginTop: 8 },
   backText: { color: AppColors.textMuted, fontWeight: '600' },
 });
