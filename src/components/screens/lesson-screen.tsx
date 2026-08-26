@@ -1,18 +1,20 @@
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { EmptyState } from '@/components/empty-state';
 import { ScreenContainer } from '@/components/screen-container';
 import { getProgressKey } from '@/data/lessons';
 import { useProgress } from '@/hooks/use-progress';
-import { isSpeechRecognitionAvailable, speakText, startRecognition } from '@/services/speech';
+import { isSpeechRecognitionAvailable, speakText, startRecognition, stopSpeaking } from '@/services/speech';
 import type { Lesson } from '@/types/learning';
 import { useTheme, type ThemeColors } from '@/theme/theme-context';
 
 interface LessonScreenProps {
   lesson: Lesson | undefined;
 }
+
+type SpeechSpeed = 'lenta' | 'normal' | 'rápida';
 
 export function LessonScreen({ lesson }: LessonScreenProps) {
   const { colors } = useTheme();
@@ -22,10 +24,17 @@ export function LessonScreen({ lesson }: LessonScreenProps) {
   const [cardIndex, setCardIndex] = useState(savedIndex);
   const [isFlipped, setIsFlipped] = useState(false);
   const [audioFeedback, setAudioFeedback] = useState<string | null>(null);
+  const [speechSpeed, setSpeechSpeed] = useState<SpeechSpeed>('normal');
   const safeIndex = lesson?.words.length
     ? Math.min(Math.max(0, cardIndex), lesson.words.length - 1)
     : 0;
   const word = lesson?.words[safeIndex];
+
+  useEffect(() => {
+    return () => {
+      stopSpeaking();
+    };
+  }, []);
 
   if (!lesson) {
     return (
@@ -56,8 +65,11 @@ export function LessonScreen({ lesson }: LessonScreenProps) {
   const isFirst = safeIndex === 0;
   const isLast = safeIndex === lesson.words.length - 1;
   const listenToWord = (): void => {
+    const rate = speechSpeed === 'lenta' ? 0.5 : speechSpeed === 'rápida' ? 1.2 : 0.85;
     setAudioFeedback(
-      speakText(word.source, { language: lesson.language === 'fr' ? 'fr-FR' : 'en-US' }) ? `Escuchando pronunciación en ${lesson.language === 'fr' ? 'francés' : 'inglés'}.` : 'Audio no disponible ahora.',
+      speakText(word.source, { language: lesson.language === 'fr' ? 'fr-FR' : 'en-US', rate }) 
+        ? `Escuchando a velocidad ${speechSpeed}.` 
+        : 'Audio no disponible ahora.',
     );
   };
   const practicePronunciation = async (): Promise<void> => {
@@ -80,6 +92,20 @@ export function LessonScreen({ lesson }: LessonScreenProps) {
           {isFlipped ? `inglés: ${word.source}` : 'Toca para ver la traducción'}
         </Text>
       </Pressable>
+
+      <View style={styles.speedRow}>
+        {(['lenta', 'normal', 'rápida'] as SpeechSpeed[]).map((speed) => (
+          <Pressable 
+            key={speed} 
+            style={[styles.speedButton, speechSpeed === speed && styles.speedButtonActive]}
+            onPress={() => setSpeechSpeed(speed)}
+          >
+            <Text style={[styles.speedText, speechSpeed === speed && styles.speedTextActive]}>
+              {speed === 'lenta' ? '🐢 Lenta' : speed === 'normal' ? '🦊 Normal' : '⚡ Rápida'}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
 
       <View style={styles.audioRow}>
         <Pressable style={styles.audioButton} onPress={listenToWord}>
@@ -130,6 +156,11 @@ function createStyles(colors: ThemeColors) { return StyleSheet.create({
   },
   word: { color: colors.text, fontSize: 34, fontWeight: '800', textAlign: 'center' },
   hint: { color: colors.textMuted, marginTop: 12, textAlign: 'center' },
+  speedRow: { flexDirection: 'row', gap: 6, marginBottom: 12, justifyContent: 'center' },
+  speedButton: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 99, backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.surfaceRaised },
+  speedButtonActive: { borderColor: colors.primary, backgroundColor: colors.surface },
+  speedText: { color: colors.textMuted, fontSize: 13, fontWeight: '600' },
+  speedTextActive: { color: colors.primaryBright, fontWeight: '800' },
   row: { flexDirection: 'row', gap: 10 },
   audioRow: { flexDirection: 'row', gap: 10, marginBottom: 8 },
   audioButton: { flex: 1, backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 11, alignItems: 'center' },

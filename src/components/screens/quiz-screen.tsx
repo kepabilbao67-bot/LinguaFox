@@ -7,7 +7,7 @@ import { ScreenContainer } from '@/components/screen-container';
 import { ErrorExplanationCard } from '@/components/ErrorExplanationCard';
 import { AppColors } from '@/constants/app-theme';
 import { useQuiz } from '@/hooks/use-quiz';
-import { speakText } from '@/services/speech';
+import { speakText, stopSpeaking } from '@/services/speech';
 import type { Lesson } from '@/types/learning';
 import type { PedagogicalCorrection } from '@/types/pedagogical-correction';
 
@@ -15,9 +15,18 @@ interface QuizScreenProps {
   lesson: Lesson | undefined;
 }
 
+type SpeechSpeed = 'lenta' | 'normal' | 'rápida';
+
 export function QuizScreen({ lesson }: QuizScreenProps) {
   const quiz = useQuiz(lesson);
   const [audioFeedback, setAudioFeedback] = useState<string | null>(null);
+  const [speechSpeed, setSpeechSpeed] = useState<SpeechSpeed>('normal');
+
+  useEffect(() => {
+    return () => {
+      stopSpeaking();
+    };
+  }, []);
 
   useEffect(() => {
     if (!quiz.isFinished || !lesson) return;
@@ -73,6 +82,11 @@ export function QuizScreen({ lesson }: QuizScreenProps) {
     textoParaVoz: `Recuerda, ${question.source} significa ${question.translation}.`,
   } : null;
 
+  const listenToWord = () => {
+    const rate = speechSpeed === 'lenta' ? 0.5 : speechSpeed === 'rápida' ? 1.2 : 0.85;
+    setAudioFeedback(speakText(question.source, { language: lesson.language === 'fr' ? 'fr-FR' : 'en-US', rate }) ? `Escuchando a velocidad ${speechSpeed}.` : 'Audio no disponible ahora.');
+  };
+
   return (
     <ScreenContainer title={`Quiz · ${lesson.title}`}>
       <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
@@ -85,9 +99,24 @@ export function QuizScreen({ lesson }: QuizScreenProps) {
         <View style={styles.card}>
           <Text style={styles.prompt}>¿Qué significa?</Text>
           <Text style={styles.word}>{question.source}</Text>
+          
+          <View style={styles.speedRow}>
+            {(['lenta', 'normal', 'rápida'] as SpeechSpeed[]).map((speed) => (
+              <Pressable 
+                key={speed} 
+                style={[styles.speedButton, speechSpeed === speed && styles.speedButtonActive]}
+                onPress={() => setSpeechSpeed(speed)}
+              >
+                <Text style={[styles.speedText, speechSpeed === speed && styles.speedTextActive]}>
+                  {speed === 'lenta' ? '🐢' : speed === 'normal' ? '🦊' : '⚡'}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+
           <Pressable
             style={styles.listenButton}
-            onPress={() => setAudioFeedback(speakText(question.source, { language: lesson.language === 'fr' ? 'fr-FR' : 'en-US' }) ? 'Escuchando palabra.' : 'Audio no disponible ahora.') }>
+            onPress={listenToWord}>
             <Text style={styles.listenText}>🔊 Escuchar</Text>
           </Pressable>
         </View>
@@ -155,7 +184,12 @@ const styles = StyleSheet.create({
   },
   prompt: { color: AppColors.textMuted, fontSize: 15 },
   word: { color: AppColors.text, fontSize: 32, fontWeight: '800', marginTop: 8 },
-  listenButton: { backgroundColor: AppColors.primary, borderRadius: 10, paddingVertical: 9, paddingHorizontal: 14, marginTop: 16 },
+  speedRow: { flexDirection: 'row', gap: 8, marginTop: 16, marginBottom: 4 },
+  speedButton: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 99, backgroundColor: AppColors.surfaceRaised, borderWidth: 1, borderColor: AppColors.surfaceRaised },
+  speedButtonActive: { borderColor: AppColors.primary, backgroundColor: AppColors.background },
+  speedText: { color: AppColors.textMuted, fontSize: 16 },
+  speedTextActive: { color: AppColors.text, fontWeight: '800' },
+  listenButton: { backgroundColor: AppColors.primary, borderRadius: 10, paddingVertical: 9, paddingHorizontal: 14, marginTop: 12 },
   listenText: { color: AppColors.text, fontWeight: '800' },
   audioFeedback: { color: AppColors.textMuted, textAlign: 'center', fontSize: 13, marginTop: -8, marginBottom: 12 },
   option: { borderRadius: 12, padding: 15, marginBottom: 9 },
