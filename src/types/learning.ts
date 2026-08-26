@@ -46,6 +46,7 @@ export interface ProgressState {
   personajesConCharla: string[];
   ultimoDiaActivo: string | null;
   rachaActual: number;
+  ultimoTimestampActivo: number | null;
   logrosDesbloqueados: Record<string, string>;
   onboardingCompleto: boolean;
 }
