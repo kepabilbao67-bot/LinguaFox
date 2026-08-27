@@ -102,6 +102,14 @@ export function HomeScreen() {
           );
         })
       )}
+      <Pressable
+        style={styles.privacyLink}
+        onPress={() => router.push('/privacy')}
+        accessibilityRole="link"
+        accessibilityLabel="Abrir política de privacidad"
+        hitSlop={8}>
+        <Text style={styles.privacyText}>Política de privacidad</Text>
+      </Pressable>
     </ScreenContainer>
   );
 }
@@ -192,4 +200,6 @@ function createStyles(colors: ThemeColors) { return StyleSheet.create({
   quizButton: { backgroundColor: colors.accent },
   buttonText: { color: colors.text, fontWeight: '800' },
   pressed: { opacity: 0.78 },
+  privacyLink: { alignItems: 'center', paddingVertical: 16, marginTop: 8 },
+  privacyText: { color: colors.textMuted, fontSize: 12, textDecorationLine: 'underline' },
 }); }
