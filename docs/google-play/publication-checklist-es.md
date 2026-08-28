@@ -8,7 +8,7 @@ Guía secuencial para el proceso completo de lanzamiento de LinguaFox en Google 
 - [x] **Código consolidado y auditado:** Rama `stabilization/linguafox-baseline` limpia, sin errores de compilación, linter ni pruebas.
 - [x] **APK de previsualización probado:** Binario local generado y verificado estáticamente.
 - [x] **Documentación legal redactada:** Política de privacidad interna en la app y página HTML estática (`docs/privacy.html`) preparadas.
-- [ ] **Alojamiento público de la Política de Privacidad:** Publicar `docs/privacy.html` en una URL HTTPS pública accesible (por ejemplo, mediante GitHub Pages o servidor web propio).
+- [x] **Alojamiento público de la Política de Privacidad:** Publicada en `https://kepabilbao67-bot.github.io/LinguaFox/privacy.html` (Verificada con respuesta HTTP 200).
 - [ ] **Recursos gráficos generados:** Icono de 512x512 px, Feature Graphic de 1024x500 px y capturas de pantalla reales preparadas.
 
 ---

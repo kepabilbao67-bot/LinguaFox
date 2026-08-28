@@ -20,7 +20,7 @@
 - **Datos de contacto del desarrollador:**
   - Correo electrónico: `pedrobilbao93@gmail.com`
   - Sitio web / Dominio: *(Pendiente de asignar)*
-  - Política de privacidad (URL HTTPS pública): `PENDIENTE DE PUBLICACIÓN` (Alojada en `docs/privacy.html` lista para publicar en GitHub Pages o web personal).
+  - Política de privacidad (URL HTTPS pública): `https://kepabilbao67-bot.github.io/LinguaFox/privacy.html` (Verificada con respuesta HTTP 200).
 
 - **Cinco palabras clave orientativas:**
   1. `aprender inglés`
