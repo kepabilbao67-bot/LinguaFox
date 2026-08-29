@@ -10,6 +10,82 @@ export interface Word {
   translation: string;
 }
 
+export interface VocabItem {
+  en: string;
+  es: string;
+  ipa?: string;
+}
+
+export type ExerciseType =
+  | 'multipleChoice'
+  | 'translate'
+  | 'listen'
+  | 'match'
+  | 'speak'
+  | 'fillBlank';
+
+export interface BaseExercise {
+  id: string;
+  type: ExerciseType;
+  prompt: string;
+}
+
+export interface MultipleChoiceExercise extends BaseExercise {
+  type: 'multipleChoice';
+  question: string;
+  audioText?: string;
+  options: readonly string[];
+  answer: string;
+}
+
+export interface TranslateExercise extends BaseExercise {
+  type: 'translate';
+  sourceText: string;
+  audioText: string;
+  wordBank: readonly string[];
+  answerWords: readonly string[];
+}
+
+export interface ListenExercise extends BaseExercise {
+  type: 'listen';
+  audioText: string;
+  options: readonly string[];
+  answer: string;
+}
+
+export interface MatchPair {
+  en: string;
+  es: string;
+}
+
+export interface MatchExercise extends BaseExercise {
+  type: 'match';
+  pairs: readonly MatchPair[];
+}
+
+export interface SpeakExercise extends BaseExercise {
+  type: 'speak';
+  audioText: string;
+  translation: string;
+}
+
+export interface FillBlankExercise extends BaseExercise {
+  type: 'fillBlank';
+  sentence: string;
+  audioText: string;
+  options: readonly string[];
+  answer: string;
+  translation: string;
+}
+
+export type Exercise =
+  | MultipleChoiceExercise
+  | TranslateExercise
+  | ListenExercise
+  | MatchExercise
+  | SpeakExercise
+  | FillBlankExercise;
+
 export interface Lesson {
   id: string;
   title: string;
@@ -17,6 +93,19 @@ export interface Lesson {
   language: LanguageCode;
   level?: CEFRLevel;
   words: readonly Word[];
+  unitId?: string;
+  icon?: string;
+  vocab?: readonly VocabItem[];
+  exercises?: readonly Exercise[];
+}
+
+export interface Unit {
+  id: string;
+  level: CEFRLevel;
+  title: string;
+  description: string;
+  color: string;
+  lessons: readonly Lesson[];
 }
 
 export interface Question extends Word {
@@ -27,6 +116,27 @@ export interface AppSettings {
   darkMode: boolean;
   soundEnabled: boolean;
   modoTema?: 'claro' | 'oscuro' | 'sistema';
+}
+
+export type CrownLevel = 'none' | 'bronze' | 'silver' | 'gold' | 'diamond';
+
+export interface LessonCrown {
+  lessonId: string;
+  level: CrownLevel;
+  accuracy: number;
+  perfectPronunciation: boolean;
+  achievedAt: number;
+}
+
+export interface SRSCard {
+  en: string;
+  es: string;
+  ipa?: string;
+  repetitions: number;
+  interval: number;
+  easeFactor: number;
+  dueDate: number;
+  lastReviewed: number;
 }
 
 export interface ProgressState {
@@ -49,6 +159,12 @@ export interface ProgressState {
   ultimoTimestampActivo: number | null;
   logrosDesbloqueados: Record<string, string>;
   onboardingCompleto: boolean;
+  hearts: number;
+  heartsRefillAt: number | null;
+  gems: number;
+  coins: number;
+  crowns: Record<string, LessonCrown>;
+  srs: Record<string, SRSCard>;
 }
 
 export interface QuizReward {
