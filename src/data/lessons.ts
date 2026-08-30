@@ -1,9 +1,14 @@
 import type { LanguageCode, Lesson } from '@/types/learning';
+import { COURSE_EN_ES } from './courses/en-es';
 
-const ENGLISH_LESSONS: readonly Lesson[] = [
+// Todas las lecciones oficiales del curso de inglés (10 Unidades, 20 Lecciones completas)
+const ENGLISH_COURSE_LESSONS: readonly Lesson[] = COURSE_EN_ES.allLessonsFlat().map(({ lesson }) => lesson);
+
+// Fallbacks de compatibilidad para IDs antiguos
+const LEGACY_ENGLISH_LESSONS: readonly Lesson[] = [
   {
     id: 'basico-1',
-    title: 'Básico 1',
+    title: 'Básico 1 (Legacy)',
     description: 'Saludos y expresiones esenciales',
     language: 'en',
     words: [
@@ -17,7 +22,7 @@ const ENGLISH_LESSONS: readonly Lesson[] = [
   },
   {
     id: 'basico-2',
-    title: 'Básico 2',
+    title: 'Básico 2 (Legacy)',
     description: 'Objetos y palabras cotidianas',
     language: 'en',
     words: [
@@ -31,7 +36,7 @@ const ENGLISH_LESSONS: readonly Lesson[] = [
   },
   {
     id: 'viajes',
-    title: 'Viajes',
+    title: 'Viajes (Legacy)',
     description: 'Vocabulario para moverte por el mundo',
     language: 'en',
     words: [
@@ -43,7 +48,9 @@ const ENGLISH_LESSONS: readonly Lesson[] = [
       { id: 'suitcase', source: 'suitcase', translation: 'maleta' },
     ],
   },
-] as const;
+];
+
+export const ENGLISH_LESSONS: readonly Lesson[] = ENGLISH_COURSE_LESSONS;
 
 const FRENCH_LESSONS: readonly Lesson[] = [
   { id: 'basico-1', title: 'Bases 1', description: 'Saludos y expresiones esenciales', language: 'fr', words: [{ id:'bonjour',source:'bonjour',translation:'hola'},{id:'aurevoir',source:'au revoir',translation:'adiós'},{id:'silvousplait',source:"s'il vous plaît",translation:'por favor'},{id:'merci',source:'merci',translation:'gracias'},{id:'oui',source:'oui',translation:'sí'},{id:'non',source:'non',translation:'no'}] },
@@ -51,15 +58,31 @@ const FRENCH_LESSONS: readonly Lesson[] = [
   { id: 'viajes', title: 'Viajes', description: 'Vocabulario para moverte por el mundo', language: 'fr', words: [{id:'aeroport',source:'aéroport',translation:'aeropuerto'},{id:'billet',source:'billet',translation:'billete'},{id:'train',source:'train',translation:'tren'},{id:'plage',source:'plage',translation:'playa'},{id:'carte',source:'carte',translation:'mapa'},{id:'valise',source:'valise',translation:'maleta'}] },
 ] as const;
 
-export const LESSONS_BY_LANGUAGE: Readonly<Record<LanguageCode, readonly Lesson[]>> = { en: ENGLISH_LESSONS, fr: FRENCH_LESSONS, es: [], it: [], de: [], pt: [] };
+export const LESSONS_BY_LANGUAGE: Readonly<Record<LanguageCode, readonly Lesson[]>> = {
+  en: ENGLISH_LESSONS,
+  fr: FRENCH_LESSONS,
+  es: [],
+  it: [],
+  de: [],
+  pt: [],
+};
+
 export const LESSONS: readonly Lesson[] = [...ENGLISH_LESSONS, ...FRENCH_LESSONS];
 
 export function getLessonById(id: string | undefined, language: LanguageCode = 'en'): Lesson | undefined {
-  return id ? LESSONS_BY_LANGUAGE[language].find((lesson) => lesson.id === id) : undefined;
+  if (!id) return undefined;
+  const found = LESSONS_BY_LANGUAGE[language]?.find((lesson) => lesson.id === id);
+  if (found) return found;
+  if (language === 'en') {
+    return LEGACY_ENGLISH_LESSONS.find((l) => l.id === id);
+  }
+  return undefined;
 }
 
 export function getLessonsByLanguage(language: LanguageCode): readonly Lesson[] {
   return LESSONS_BY_LANGUAGE[language] ?? [];
 }
 
-export function getProgressKey(language: LanguageCode, lessonId: string): string { return `${language}:${lessonId}`; }
+export function getProgressKey(language: LanguageCode, lessonId: string): string {
+  return `${language}:${lessonId}`;
+}
