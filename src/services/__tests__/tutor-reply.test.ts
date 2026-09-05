@@ -88,4 +88,13 @@ describe('fetchTutorReply (Local)', () => {
     await fetchTutorReply('i am agree');
     expect(globalThis.fetch).not.toHaveBeenCalled();
   });
+
+  it('proporciona respuestas y sugerencias adaptadas al idioma objetivo (francés, alemán)', async () => {
+    const frResult = await fetchTutorReply('bonjour', { targetLanguage: 'fr' });
+    expect(frResult?.text).toContain('tuteur de français');
+    expect(frResult?.suggestions[0]).toContain('très bien');
+
+    const deResult = await fetchTutorReply('danke', { targetLanguage: 'de' });
+    expect(deResult?.text).toContain('Gern geschehen!');
+  });
 });
