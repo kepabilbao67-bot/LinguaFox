@@ -31,6 +31,7 @@ interface ProgressContextValue {
   incrementSpokenPhrases: () => void;
   unlockCity: (cityId: string) => void;
   completeScenario: (scenarioId: string) => void;
+  claimDailyChallenge: (challengeId: string, xpReward?: number) => void;
 }
 
 const ProgressContext = createContext<ProgressContextValue | null>(null);
@@ -320,6 +321,28 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
     });
   }, []);
 
+  const claimDailyChallenge = useCallback((challengeId: string, xpReward: number = 20) => {
+    if (!challengeId) return;
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+    setProgress((current) => {
+      const claims = current.dailyChallengeClaims ?? {};
+      if (claims[challengeId] === today) {
+        return current; // Already claimed today
+      }
+
+      return {
+        ...current,
+        experiencia: current.experiencia + xpReward,
+        dailyChallengeClaims: {
+          ...claims,
+          [challengeId]: today,
+        },
+      };
+    });
+  }, []);
+
   const setLanguages = useCallback((nativo: LanguageCode, objetivo: LanguageCode) => {
     setProgress((current) => ({ ...current, idiomaNativo: nativo, idiomaObjetivo: objetivo }));
   }, []);
@@ -351,6 +374,7 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
       incrementSpokenPhrases,
       unlockCity,
       completeScenario,
+      claimDailyChallenge,
     }),
     [
       isHydrated,
@@ -369,6 +393,7 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
       incrementSpokenPhrases,
       unlockCity,
       completeScenario,
+      claimDailyChallenge,
     ],
   );
 

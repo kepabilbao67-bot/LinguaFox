@@ -212,6 +212,7 @@ export interface ProgressState {
   completedScenarios?: readonly string[];
   spokenPhrasesCount?: number;
   logrosXpOtorgados?: readonly string[];
+  dailyChallengeClaims?: Record<string, string>;
 }
 
 export interface QuizReward {

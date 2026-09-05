@@ -10,6 +10,7 @@ import { useProgress } from '@/hooks/use-progress';
 import { levelFromXp, xpIntoLevel } from '@/utils/rewards';
 import { ACHIEVEMENTS } from '@/data/achievements';
 import { getCityForLanguage } from '@/data/cities';
+import { getDailyChallenges, type DailyChallenge } from '@/utils/daily-challenges';
 import type { CEFRLevel } from '@/types/learning';
 
 const ALL_CEFR_LEVELS: readonly CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
@@ -28,7 +29,7 @@ const LANGUAGE_NAMES: Record<string, string> = {
 export function HomeScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const { progress, isHydrated, latestAchievementId } = useProgress();
+  const { progress, isHydrated, latestAchievementId, claimDailyChallenge } = useProgress();
   const [toast, setToast] = useState<string | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<CEFRLevel>('A1');
 
@@ -72,6 +73,10 @@ export function HomeScreen() {
   // Pending Errors / SRS Count
   const pendingErrorsCount = progress.trackedErrors?.filter((e) => !e.reviewed).length ?? 0;
   const srsDueCardsCount = Object.keys(progress.srs ?? {}).length;
+
+  // Daily Challenges
+  const dailyChallenges: readonly DailyChallenge[] = useMemo(() => getDailyChallenges(progress), [progress]);
+  const claimedCount = dailyChallenges.filter((c) => c.claimed).length;
 
   return (
     <ScreenContainer title="LinguaFox" isLoading={!isHydrated}>
@@ -151,48 +156,37 @@ export function HomeScreen() {
               <Text style={styles.dailyGoalIcon}>🎯</Text>
               <Text style={styles.dailyGoalTitle}>Retos Diarios</Text>
             </View>
-            <Text style={styles.dailyGoalXpReward}>+60 XP hoy</Text>
+            <Text style={styles.dailyGoalXpReward}>
+              {claimedCount === dailyChallenges.length ? '¡Todos reclamados! 🌟' : `+${dailyChallenges.length * 20} XP hoy`}
+            </Text>
           </View>
 
           <View style={styles.challengeList}>
-            {/* Mission 1: Lesson */}
-            <View style={styles.challengeItem}>
-              <Text style={styles.challengeCheck}>
-                {levelCompletedCount > 0 ? '✅' : '⏳'}
-              </Text>
-              <View style={styles.challengeTextWrap}>
-                <Text style={styles.challengeItemTitle}>Completar 1 lección</Text>
-                <Text style={styles.challengeItemSub}>
-                  {levelCompletedCount > 0 ? 'Completado (+20 XP)' : '0/1 lecciones hoy'}
+            {dailyChallenges.map((challenge) => (
+              <View key={challenge.id} style={styles.challengeItem}>
+                <Text style={styles.challengeCheck}>
+                  {challenge.claimed ? '🌟' : challenge.completed ? '✅' : '⏳'}
                 </Text>
+                <View style={styles.challengeTextWrap}>
+                  <Text style={styles.challengeItemTitle}>{challenge.title}</Text>
+                  <Text style={styles.challengeItemSub}>
+                    {challenge.claimed
+                      ? 'Reclamado (+20 XP)'
+                      : challenge.completed
+                        ? '¡Completado! Listo para reclamar'
+                        : challenge.description}
+                  </Text>
+                </View>
+                {challenge.completed && !challenge.claimed && (
+                  <Pressable
+                    style={styles.claimButton}
+                    onPress={() => claimDailyChallenge(challenge.id, challenge.xpReward)}
+                  >
+                    <Text style={styles.claimButtonText}>+20 XP</Text>
+                  </Pressable>
+                )}
               </View>
-            </View>
-
-            {/* Mission 2: Conversation */}
-            <View style={styles.challengeItem}>
-              <Text style={styles.challengeCheck}>
-                {progress.mensajesPersonajes > 0 ? '✅' : '⏳'}
-              </Text>
-              <View style={styles.challengeTextWrap}>
-                <Text style={styles.challengeItemTitle}>Mantener 1 charla con Fox</Text>
-                <Text style={styles.challengeItemSub}>
-                  {progress.mensajesPersonajes > 0 ? 'Completado (+20 XP)' : '0/1 conversaciones hoy'}
-                </Text>
-              </View>
-            </View>
-
-            {/* Mission 3: Pronunciation / SRS */}
-            <View style={styles.challengeItem}>
-              <Text style={styles.challengeCheck}>
-                {(progress.spokenPhrasesCount ?? 0) > 0 ? '✅' : '⏳'}
-              </Text>
-              <View style={styles.challengeTextWrap}>
-                <Text style={styles.challengeItemTitle}>Practicar fonética con audio</Text>
-                <Text style={styles.challengeItemSub}>
-                  {(progress.spokenPhrasesCount ?? 0) > 0 ? 'Completado (+20 XP)' : 'Estudio de pronunciación'}
-                </Text>
-              </View>
-            </View>
+            ))}
           </View>
         </View>
 
@@ -587,6 +581,17 @@ function createStyles(colors: ThemeColors) {
     challengeTextWrap: { flex: 1 },
     challengeItemTitle: { color: colors.text, fontSize: 13, fontWeight: '700' },
     challengeItemSub: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
+    claimButton: {
+      backgroundColor: '#10B981',
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 10,
+    },
+    claimButtonText: {
+      color: '#FFFFFF',
+      fontSize: 11,
+      fontWeight: '900',
+    },
     mascotHero: {
       backgroundColor: colors.surfaceRaised,
       borderRadius: 20,
