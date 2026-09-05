@@ -47,7 +47,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "verify:play": "node ./scripts/verify-play-readiness.mjs"
   },
   "private": true
 }
