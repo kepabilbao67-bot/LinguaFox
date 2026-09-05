@@ -56,10 +56,10 @@ export function ProgressScreen() {
 
       // Real Competency Metrics
       const readingScore = totalLessons > 0 ? Math.min(100, Math.round((completedLessons / totalLessons) * 100)) : 0;
-      const listeningScore = totalLessons > 0 ? Math.min(100, Math.round((completedLessons / totalLessons) * 95)) : 0;
+      const listeningScore = totalLessons > 0 ? Math.min(100, Math.round((completedLessons / totalLessons) * 100)) : 0;
       const vocabularyScore = totalWords > 0 ? Math.min(100, Math.round((learnedWords / totalWords) * 100)) : 0;
-      const grammarScore = totalLessons > 0 ? Math.min(100, Math.round((completedLessons / totalLessons) * 90)) : 0;
-      const writingScore = totalLessons > 0 ? Math.min(100, Math.round((completedLessons / totalLessons) * 85)) : 0;
+      const grammarScore = totalLessons > 0 ? Math.min(100, Math.round((completedLessons / totalLessons) * 100)) : 0;
+      const writingScore = totalLessons > 0 ? Math.min(100, Math.round((completedLessons / totalLessons) * 100)) : 0;
 
       return {
         ...meta,

@@ -12,7 +12,7 @@ import { useProgress } from '@/hooks/use-progress';
 export function KidsScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const { addExperience } = useProgress();
+  const { progress, addExperience } = useProgress();
 
   const [selectedTopic, setSelectedTopic] = useState<KidsTopic>(KIDS_TOPICS[0]);
   const [activeItemIndex, setActiveItemIndex] = useState(0);
@@ -22,7 +22,7 @@ export function KidsScreen() {
   const activeItem = selectedTopic.items[activeItemIndex] ?? selectedTopic.items[0];
 
   const playWordAudio = (word: string) => {
-    speakText(word, { language: 'en', rate: 0.75 });
+    speakText(word, { language: progress.idiomaObjetivo ?? 'en', rate: 0.75 });
   };
 
   const nextCard = () => {
