@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppColors } from '@/constants/app-theme';
 import { useProgress } from '@/hooks/use-progress';
+import { getLessonsByLanguage } from '@/data/lessons';
 import type { LanguageCode } from '@/types/learning';
 
 const OPTIONS: readonly { code: LanguageCode; label: string; flag: string }[] = [
@@ -12,7 +13,9 @@ const OPTIONS: readonly { code: LanguageCode; label: string; flag: string }[] = 
   { code: 'fr', label: 'Francés', flag: '🇫🇷' },
   { code: 'it', label: 'Italiano', flag: '🇮🇹' },
   { code: 'de', label: 'Alemán', flag: '🇩🇪' },
-  { code: 'pt', label: 'Portugués', flag: '🇵🇹' }
+  { code: 'pt', label: 'Portugués', flag: '🇵🇹' },
+  { code: 'eu', label: 'Euskera', flag: '🟢' },
+  { code: 'ca', label: 'Catalán', flag: '🟡' },
 ];
 
 export function LanguageScreen() {
@@ -21,7 +24,8 @@ export function LanguageScreen() {
   const [objetivo, setObjetivo] = useState<LanguageCode>(progress.idiomaObjetivo);
 
   const save = () => {
-    if (!['en', 'fr'].includes(objetivo)) return;
+    const lessons = getLessonsByLanguage(objetivo);
+    if (!lessons || lessons.length === 0) return;
     setLanguages(nativo, objetivo);
     router.replace('/');
   };
@@ -48,7 +52,7 @@ export function LanguageScreen() {
         <Text style={styles.sectionTitle}>Quiero aprender:</Text>
         <View style={styles.grid}>
           {OPTIONS.map(option => {
-            const hasContent = option.code === 'en' || option.code === 'fr';
+            const hasContent = getLessonsByLanguage(option.code).length > 0;
             return (
               <Pressable
                 key={`objetivo-${option.code}`}

@@ -2,9 +2,13 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image } from 'expo-image';
 import { AppColors } from '@/constants/app-theme';
 import { useProgress } from '@/hooks/use-progress';
+import { getLessonsByLanguage } from '@/data/lessons';
 import type { LanguageCode } from '@/types/learning';
+
+const COVER_IMAGE = require('../../../assets/images/linguafox-official-cover.png');
 
 const STEPS = [
   'Bienvenido a LinguaFox 🦊',
@@ -19,7 +23,9 @@ const OPTIONS: readonly { code: LanguageCode; label: string; flag: string }[] = 
   { code: 'fr', label: 'Francés', flag: '🇫🇷' },
   { code: 'it', label: 'Italiano', flag: '🇮🇹' },
   { code: 'de', label: 'Alemán', flag: '🇩🇪' },
-  { code: 'pt', label: 'Portugués', flag: '🇵🇹' }
+  { code: 'pt', label: 'Portugués', flag: '🇵🇹' },
+  { code: 'eu', label: 'Euskera', flag: '🟢' },
+  { code: 'ca', label: 'Catalán', flag: '🟡' },
 ];
 
 export function OnboardingScreen() {
@@ -29,7 +35,8 @@ export function OnboardingScreen() {
   const [objetivo, setObjetivo] = useState<LanguageCode>('en');
 
   const finish = (): void => {
-    if (!['en', 'fr'].includes(objetivo)) return;
+    const availableLessons = getLessonsByLanguage(objetivo);
+    if (!availableLessons || availableLessons.length === 0) return;
     setLanguages(nativo, objetivo);
     completeOnboarding();
     router.replace('/');
@@ -38,7 +45,9 @@ export function OnboardingScreen() {
   return (
     <SafeAreaView style={s.safe}>
       <ScrollView contentContainerStyle={s.page}>
-        <Text style={s.logo}>🦊</Text>
+        <View style={s.coverContainer}>
+          <Image source={COVER_IMAGE} style={s.coverBanner} contentFit="contain" />
+        </View>
         <Text style={s.title}>{STEPS[step]}</Text>
 
         {step === 3 ? (
@@ -46,8 +55,13 @@ export function OnboardingScreen() {
             <Text style={s.sectionTitle}>Mi idioma nativo es:</Text>
             <View style={s.grid}>
               {OPTIONS.map(option => (
-                <Pressable key={`nativo-${option.code}`} style={[s.option, nativo === option.code && s.selected]} onPress={() => setNativo(option.code)}>
+                <Pressable
+                  key={`nativo-${option.code}`}
+                  style={[s.option, s.optionNative, nativo === option.code && s.selected]}
+                  onPress={() => setNativo(option.code)}
+                >
                   <Text style={s.flag}>{option.flag}</Text>
+                  <Text style={s.label}>{option.label}</Text>
                 </Pressable>
               ))}
             </View>
@@ -55,7 +69,7 @@ export function OnboardingScreen() {
             <Text style={s.sectionTitle}>Quiero aprender:</Text>
             <View style={s.grid}>
               {OPTIONS.map(option => {
-                const hasContent = option.code === 'en' || option.code === 'fr';
+                const hasContent = getLessonsByLanguage(option.code).length > 0;
                 return (
                   <Pressable
                     key={`objetivo-${option.code}`}
@@ -91,13 +105,15 @@ export function OnboardingScreen() {
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: AppColors.background },
   page: { padding: 28, alignItems: 'center', justifyContent: 'center', gap: 20, maxWidth: 600, width: '100%', alignSelf: 'center', minHeight: '100%' },
-  logo: { fontSize: 72 },
+  coverContainer: { width: '100%', height: 160, borderRadius: 16, overflow: 'hidden', backgroundColor: AppColors.surfaceRaised, alignItems: 'center', justifyContent: 'center' },
+  coverBanner: { width: '100%', height: '100%' },
   title: { color: AppColors.text, fontSize: 28, fontWeight: '900', textAlign: 'center' },
   copy: { color: AppColors.textMuted, fontSize: 17, textAlign: 'center', lineHeight: 25 },
   optionsContainer: { width: '100%', gap: 15 },
   sectionTitle: { color: AppColors.text, fontSize: 18, fontWeight: '800' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' },
   option: { backgroundColor: AppColors.surface, borderRadius: 14, padding: 12, alignItems: 'center', flexDirection: 'row', gap: 6 },
+  optionNative: { width: '45%' },
   optionObjective: { width: '45%' },
   selected: { borderColor: AppColors.primary, borderWidth: 2 },
   disabledOption: { opacity: 0.6 },
