@@ -151,20 +151,43 @@ export function ChatScreen() {
     [addTrackedError, appendMessage, createMessage, incrementSpokenPhrases, isHydrated, isSending, mode, params.characterId, params.scenarioId, playAudio, progress.idiomaObjetivo, progress.nivelObjetivo],
   );
 
-  const simulateVoiceInput = () => {
+  const handleVoicePrompt = () => {
     setIsRecording(true);
     setTimeout(() => {
       setIsRecording(false);
-      const samplePhrases = [
-        'Hello! I would like to practice speaking with you.',
-        'Can you tell me more about this city?',
-        'I am really enjoying learning this language.',
-        'Could you recommend something interesting to visit?',
-        'Yes, I agree with you completely.',
-      ];
-      const picked = samplePhrases[Math.floor(Math.random() * samplePhrases.length)];
+      const contextualSuggestions: Record<string, string[]> = {
+        en: [
+          'Hello! I would like to practice speaking with you.',
+          'Can you tell me more about this topic?',
+          'Could you recommend something interesting to visit?',
+        ],
+        es: [
+          '¡Hola! Me gustaría practicar mi español contigo.',
+          '¿Podrías explicarme más sobre esta ciudad?',
+          '¿Qué me recomiendas hacer por aquí?',
+        ],
+        fr: [
+          'Bonjour ! Je voudrais pratiquer mon français.',
+          'Pourriez-vous me recommander un bon endroit ?',
+        ],
+        de: [
+          'Hallo! Ich möchte mein Deutsch üben.',
+          'Können Sie mir bitte mehr darüber erzählen?',
+        ],
+        it: [
+          'Ciao! Vorrei fare un po’ di conversazione in italiano.',
+          'Cosa mi consigli di visitare?',
+        ],
+        pt: [
+          'Olá! Gostaria de praticar conversação.',
+          'Poderia me dar uma dica sobre a cidade?',
+        ],
+      };
+
+      const langList = contextualSuggestions[progress.idiomaObjetivo] ?? contextualSuggestions.en;
+      const picked = langList[Math.floor(Math.random() * langList.length)];
       setDraft(picked);
-    }, 1200);
+    }, 600);
   };
 
   const toggleTranslation = (messageId: string) => {
@@ -375,7 +398,8 @@ export function ChatScreen() {
               <View style={styles.inputRow}>
                 <Pressable
                   style={[styles.micBtn, isRecording && styles.micBtnActive]}
-                  onPress={simulateVoiceInput}
+                  onPress={handleVoicePrompt}
+                  accessibilityLabel="Insertar sugerencia de práctica oral"
                 >
                   <Text style={styles.micIcon}>{isRecording ? '🔴' : '🎙️'}</Text>
                 </Pressable>
