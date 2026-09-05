@@ -189,6 +189,7 @@ export interface DailyActivityMetrics {
   chatMessages: number;
   spokenPhrases: number;
   reviewsCompleted: number;
+  listeningActivities?: number;
 }
 
 export interface CompetencyCount {
@@ -234,6 +235,7 @@ export interface ProgressState {
   unlockedCities?: readonly string[];
   completedScenarios?: readonly string[];
   spokenPhrasesCount?: number;
+  listeningActivitiesCount?: number;
   logrosXpOtorgados?: readonly string[];
   dailyChallengeClaims?: Record<string, string>;
   activityByDate?: Record<string, DailyActivityMetrics>;

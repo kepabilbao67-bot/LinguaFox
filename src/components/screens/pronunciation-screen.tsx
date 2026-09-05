@@ -161,7 +161,7 @@ const PRONUNCIATION_BANK: Record<string, readonly PronunciationChallenge[]> = {
 };
 
 export function PronunciationScreen() {
-  const { progress, addExperience, incrementSpokenPhrases } = useProgress();
+  const { progress, addExperience, recordSpeakingPractice, recordListeningPractice } = useProgress();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [practiced, setPracticed] = useState(false);
   const [selectedSpeed, setSelectedSpeed] = useState<0.5 | 0.85 | 1.2>(0.85);
@@ -173,11 +173,12 @@ export function PronunciationScreen() {
     setSelectedSpeed(speed);
     stopSpeaking();
     speakText(current.phrase, { language: progress.idiomaObjetivo, rate: speed });
+    recordListeningPractice();
   };
 
   const handleRecordSelfPractice = () => {
     setPracticed(true);
-    incrementSpokenPhrases();
+    recordSpeakingPractice();
     addExperience(15);
   };
 

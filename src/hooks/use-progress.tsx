@@ -29,6 +29,8 @@ interface ProgressContextValue {
   masterTrackedError: (errorId: string) => boolean;
   recordSRSReview: (cardKey: string, quality: number, initialData?: { en: string; es: string; ipa?: string }) => void;
   addExperience: (xp: number) => void;
+  recordSpeakingPractice: () => void;
+  recordListeningPractice: () => void;
   incrementSpokenPhrases: () => void;
   unlockCity: (cityId: string) => void;
   completeScenario: (scenarioId: string) => void;
@@ -287,15 +289,27 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
     }));
   }, []);
 
-  const incrementSpokenPhrases = useCallback(() => {
+  const recordSpeakingPractice = useCallback(() => {
     const todayKey = getLocalDateKey();
     setProgress((current) => ({
       ...current,
+      ...calculateNewStreak(current, Date.now()),
       spokenPhrasesCount: (current.spokenPhrasesCount ?? 0) + 1,
       experiencia: current.experiencia + 3,
       activityByDate: recordDailyActivity(current.activityByDate, 'spokenPhrases', todayKey),
     }));
   }, []);
+
+  const recordListeningPractice = useCallback(() => {
+    const todayKey = getLocalDateKey();
+    setProgress((current) => ({
+      ...current,
+      listeningActivitiesCount: (current.listeningActivitiesCount ?? 0) + 1,
+      activityByDate: recordDailyActivity(current.activityByDate, 'listeningActivities', todayKey),
+    }));
+  }, []);
+
+  const incrementSpokenPhrases = recordSpeakingPractice;
 
   const unlockCity = useCallback((cityId: string) => {
     setProgress((current) => {
@@ -463,6 +477,8 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
       masterTrackedError,
       recordSRSReview,
       addExperience,
+      recordSpeakingPractice,
+      recordListeningPractice,
       incrementSpokenPhrases,
       unlockCity,
       completeScenario,
@@ -484,6 +500,8 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
       masterTrackedError,
       recordSRSReview,
       addExperience,
+      recordSpeakingPractice,
+      recordListeningPractice,
       incrementSpokenPhrases,
       unlockCity,
       completeScenario,

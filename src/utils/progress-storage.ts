@@ -47,6 +47,7 @@ export const DEFAULT_PROGRESS: ProgressState = {
   unlockedCities: [],
   completedScenarios: [],
   spokenPhrasesCount: 0,
+  listeningActivitiesCount: 0,
   logrosXpOtorgados: [],
   dailyChallengeClaims: {},
   activityByDate: {},
@@ -140,6 +141,7 @@ function sanitizeActivityByDate(input: unknown): Record<string, DailyActivityMet
         chatMessages: typeof m.chatMessages === 'number' && Number.isFinite(m.chatMessages) ? Math.max(0, Math.floor(m.chatMessages)) : 0,
         spokenPhrases: typeof m.spokenPhrases === 'number' && Number.isFinite(m.spokenPhrases) ? Math.max(0, Math.floor(m.spokenPhrases)) : 0,
         reviewsCompleted: typeof m.reviewsCompleted === 'number' && Number.isFinite(m.reviewsCompleted) ? Math.max(0, Math.floor(m.reviewsCompleted)) : 0,
+        listeningActivities: typeof m.listeningActivities === 'number' && Number.isFinite(m.listeningActivities) ? Math.max(0, Math.floor(m.listeningActivities)) : 0,
       };
     }
     return acc;
@@ -266,6 +268,7 @@ export function sanitizeProgress(raw: unknown): ProgressState {
     unlockedCities: sanitizeStringList(value.unlockedCities),
     completedScenarios: sanitizeStringList(value.completedScenarios),
     spokenPhrasesCount: typeof value.spokenPhrasesCount === 'number' && Number.isFinite(value.spokenPhrasesCount) ? Math.max(0, Math.floor(value.spokenPhrasesCount)) : 0,
+    listeningActivitiesCount: typeof value.listeningActivitiesCount === 'number' && Number.isFinite(value.listeningActivitiesCount) ? Math.max(0, Math.floor(value.listeningActivitiesCount)) : 0,
     logrosXpOtorgados: sanitizeStringList(value.logrosXpOtorgados),
     dailyChallengeClaims: sanitizeStringRecord(value.dailyChallengeClaims),
     activityByDate: sanitizeActivityByDate(value.activityByDate),

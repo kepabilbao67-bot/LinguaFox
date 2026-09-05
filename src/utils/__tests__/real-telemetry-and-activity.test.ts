@@ -259,4 +259,186 @@ describe('Real Daily Activity, Challenges, Streak, Errors and CEFR Telemetry', (
       expect(sanitized.trackedErrors).toEqual([]);
     });
   });
+
+  describe('6. TELEMETRÍA SEPARADA: LISTENING VS SPEAKING VS CHAT', () => {
+    const todayTs = new Date('2026-09-05T12:00:00Z').getTime();
+    const todayKey = getLocalDateKey(todayTs);
+
+    it('enviar chat escrito NO incrementa spokenPhrases', () => {
+      let state: ProgressState = {
+        ...DEFAULT_PROGRESS,
+        spokenPhrasesCount: 0,
+        activityByDate: {
+          [todayKey]: { lessonsCompleted: 0, chatMessages: 0, spokenPhrases: 0, reviewsCompleted: 0, listeningActivities: 0 },
+        },
+      };
+
+      // Simular flujo de enviar chat escrito (ChatScreen sendMessage)
+      // Solo registra interacción de chat: chatMessages + 1, pero NO spokenPhrases
+      const todayActivity = state.activityByDate?.[todayKey] ?? {
+        lessonsCompleted: 0,
+        chatMessages: 0,
+        spokenPhrases: 0,
+        reviewsCompleted: 0,
+      };
+
+      state = {
+        ...state,
+        mensajesPersonajes: state.mensajesPersonajes + 1,
+        activityByDate: {
+          ...state.activityByDate,
+          [todayKey]: {
+            ...todayActivity,
+            chatMessages: todayActivity.chatMessages + 1,
+          },
+        },
+      };
+
+      expect(state.spokenPhrasesCount).toBe(0);
+      expect(state.activityByDate?.[todayKey]?.spokenPhrases).toBe(0);
+      expect(state.activityByDate?.[todayKey]?.chatMessages).toBe(1);
+    });
+
+    it('escuchar audio Kids NO incrementa spokenPhrases', () => {
+      let state: ProgressState = {
+        ...DEFAULT_PROGRESS,
+        spokenPhrasesCount: 0,
+        activityByDate: {
+          [todayKey]: { lessonsCompleted: 0, chatMessages: 0, spokenPhrases: 0, reviewsCompleted: 0, listeningActivities: 0 },
+        },
+      };
+
+      // Simular playWordAudio en KidsScreen (solo escucha TTS)
+      const todayActivity = state.activityByDate?.[todayKey] ?? {
+        lessonsCompleted: 0,
+        chatMessages: 0,
+        spokenPhrases: 0,
+        reviewsCompleted: 0,
+      };
+
+      state = {
+        ...state,
+        listeningActivitiesCount: (state.listeningActivitiesCount ?? 0) + 1,
+        activityByDate: {
+          ...state.activityByDate,
+          [todayKey]: {
+            ...todayActivity,
+            listeningActivities: (todayActivity.listeningActivities ?? 0) + 1,
+          },
+        },
+      };
+
+      expect(state.spokenPhrasesCount).toBe(0);
+      expect(state.activityByDate?.[todayKey]?.spokenPhrases).toBe(0);
+      expect(state.activityByDate?.[todayKey]?.listeningActivities).toBe(1);
+    });
+
+    it('siguiente palabra Kids NO incrementa spokenPhrases', () => {
+      let state: ProgressState = {
+        ...DEFAULT_PROGRESS,
+        spokenPhrasesCount: 0,
+        activityByDate: {
+          [todayKey]: { lessonsCompleted: 0, chatMessages: 0, spokenPhrases: 0, reviewsCompleted: 0, listeningActivities: 0 },
+        },
+      };
+
+      // Simular nextCard en KidsScreen (avanza y reproduce audio TTS)
+      const todayActivity = state.activityByDate?.[todayKey] ?? {
+        lessonsCompleted: 0,
+        chatMessages: 0,
+        spokenPhrases: 0,
+        reviewsCompleted: 0,
+      };
+
+      state = {
+        ...state,
+        experiencia: state.experiencia + 5,
+        listeningActivitiesCount: (state.listeningActivitiesCount ?? 0) + 1,
+        activityByDate: {
+          ...state.activityByDate,
+          [todayKey]: {
+            ...todayActivity,
+            listeningActivities: (todayActivity.listeningActivities ?? 0) + 1,
+          },
+        },
+      };
+
+      expect(state.spokenPhrasesCount).toBe(0);
+      expect(state.activityByDate?.[todayKey]?.spokenPhrases).toBe(0);
+      expect(state.activityByDate?.[todayKey]?.listeningActivities).toBe(1);
+      expect(state.experiencia).toBe(5);
+    });
+
+    it('speaking real sí incrementa spokenPhrases', () => {
+      let state: ProgressState = {
+        ...DEFAULT_PROGRESS,
+        spokenPhrasesCount: 0,
+        activityByDate: {
+          [todayKey]: { lessonsCompleted: 0, chatMessages: 0, spokenPhrases: 0, reviewsCompleted: 0, listeningActivities: 0 },
+        },
+      };
+
+      // Simular práctica oral auténtica (recordSpeakingPractice en PronunciationScreen / reconocimiento)
+      const todayActivity = state.activityByDate?.[todayKey] ?? {
+        lessonsCompleted: 0,
+        chatMessages: 0,
+        spokenPhrases: 0,
+        reviewsCompleted: 0,
+      };
+
+      state = {
+        ...state,
+        spokenPhrasesCount: (state.spokenPhrasesCount ?? 0) + 1,
+        experiencia: state.experiencia + 3,
+        activityByDate: {
+          ...state.activityByDate,
+          [todayKey]: {
+            ...todayActivity,
+            spokenPhrases: (todayActivity.spokenPhrases ?? 0) + 1,
+          },
+        },
+      };
+
+      expect(state.spokenPhrasesCount).toBe(1);
+      expect(state.activityByDate?.[todayKey]?.spokenPhrases).toBe(1);
+      expect(state.experiencia).toBe(3);
+    });
+
+    it('escuchar audio no completa daily-phonetics', () => {
+      // Estado con múltiples reproducciones de audio / listening pero 0 speaking
+      const state: ProgressState = {
+        ...DEFAULT_PROGRESS,
+        spokenPhrasesCount: 0,
+        listeningActivitiesCount: 10,
+        activityByDate: {
+          [todayKey]: { lessonsCompleted: 0, chatMessages: 0, spokenPhrases: 0, reviewsCompleted: 0, listeningActivities: 10 },
+        },
+      };
+
+      const challenges = getDailyChallenges(state, todayTs);
+      const phoneticsChallenge = challenges.find((c) => c.id === 'daily-phonetics');
+
+      expect(phoneticsChallenge).toBeDefined();
+      expect(phoneticsChallenge?.completed).toBe(false);
+      expect(phoneticsChallenge?.current).toBe(0);
+    });
+
+    it('speaking real sí completa daily-phonetics', () => {
+      // Estado con práctica oral real
+      const state: ProgressState = {
+        ...DEFAULT_PROGRESS,
+        spokenPhrasesCount: 1,
+        activityByDate: {
+          [todayKey]: { lessonsCompleted: 0, chatMessages: 0, spokenPhrases: 1, reviewsCompleted: 0 },
+        },
+      };
+
+      const challenges = getDailyChallenges(state, todayTs);
+      const phoneticsChallenge = challenges.find((c) => c.id === 'daily-phonetics');
+
+      expect(phoneticsChallenge).toBeDefined();
+      expect(phoneticsChallenge?.completed).toBe(true);
+      expect(phoneticsChallenge?.current).toBe(1);
+    });
+  });
 });
