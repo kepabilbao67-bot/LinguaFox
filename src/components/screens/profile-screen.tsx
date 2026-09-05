@@ -41,6 +41,26 @@ export function ProfileScreen() {
   const srsCardsCount = Object.keys(progress.srs ?? {}).length;
   const trackedErrorsCount = progress.trackedErrors?.length ?? 0;
 
+  // 7-day streak visualizer
+  const past7Days = useMemo(() => {
+    const today = new Date();
+    const days = [];
+    const dayNames = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const isToday = i === 0;
+      const isActive = i < progress.rachaActual;
+      days.push({
+        label: dayNames[d.getDay()],
+        dateNum: d.getDate(),
+        isToday,
+        isActive,
+      });
+    }
+    return days;
+  }, [progress.rachaActual]);
+
   return (
     <ScreenContainer title="Mi Perfil" isLoading={!isHydrated}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
@@ -67,6 +87,40 @@ export function ProfileScreen() {
               <Text style={styles.xpText}>{currentXp} / 100 XP</Text>
               <Text style={styles.totalXpText}>{progress.experiencia} XP Totales</Text>
             </View>
+          </View>
+        </View>
+
+        {/* 7-Day Habit Tracker Card */}
+        <View style={styles.streakHabitCard}>
+          <View style={styles.streakHabitHeader}>
+            <Text style={styles.streakHabitTitle}>🔥 Racha Semanal</Text>
+            <Text style={styles.streakHabitCount}>{progress.rachaActual} {progress.rachaActual === 1 ? 'día' : 'días'} activos</Text>
+          </View>
+          <View style={styles.streakDaysRow}>
+            {past7Days.map((d, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.streakDayBox,
+                  d.isActive && styles.streakDayBoxActive,
+                  d.isToday && styles.streakDayBoxToday,
+                ]}
+              >
+                <Text style={[styles.streakDayLabel, d.isActive && styles.streakDayLabelActive]}>
+                  {d.label}
+                </Text>
+                <View
+                  style={[
+                    styles.streakDayCircle,
+                    d.isActive && styles.streakDayCircleActive,
+                  ]}
+                >
+                  <Text style={[styles.streakDayCircleText, d.isActive && styles.streakDayCircleTextActive]}>
+                    {d.isActive ? '🔥' : d.dateNum}
+                  </Text>
+                </View>
+              </View>
+            ))}
           </View>
         </View>
 
@@ -241,6 +295,81 @@ function createStyles(colors: ThemeColors) {
     },
     xpText: { color: colors.textMuted, fontSize: 12, fontWeight: '700' },
     totalXpText: { color: AppColors.accent, fontSize: 12, fontWeight: '800' },
+    streakHabitCard: {
+      backgroundColor: colors.surfaceRaised,
+      borderRadius: 20,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: colors.surfaceBorder,
+      gap: 12,
+    },
+    streakHabitHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    streakHabitTitle: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '800',
+    },
+    streakHabitCount: {
+      color: AppColors.primary,
+      fontSize: 13,
+      fontWeight: '700',
+    },
+    streakDaysRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      gap: 6,
+    },
+    streakDayBox: {
+      flex: 1,
+      alignItems: 'center',
+      gap: 6,
+      paddingVertical: 8,
+      borderRadius: 12,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.surfaceBorder,
+    },
+    streakDayBoxActive: {
+      borderColor: 'rgba(255, 122, 0, 0.4)',
+      backgroundColor: 'rgba(255, 122, 0, 0.08)',
+    },
+    streakDayBoxToday: {
+      borderColor: AppColors.primary,
+    },
+    streakDayLabel: {
+      color: colors.textMuted,
+      fontSize: 12,
+      fontWeight: '700',
+    },
+    streakDayLabelActive: {
+      color: AppColors.primary,
+      fontWeight: '900',
+    },
+    streakDayCircle: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      backgroundColor: colors.surfaceRaised,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    streakDayCircleActive: {
+      backgroundColor: 'rgba(255, 122, 0, 0.2)',
+    },
+    streakDayCircleText: {
+      color: colors.textMuted,
+      fontSize: 11,
+      fontWeight: '700',
+    },
+    streakDayCircleTextActive: {
+      color: AppColors.primary,
+      fontSize: 14,
+      fontWeight: '900',
+    },
     sectionTitle: { color: colors.text, fontSize: 18, fontWeight: '900', marginTop: 8 },
     statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
     statBox: {

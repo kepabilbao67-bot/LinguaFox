@@ -11,7 +11,7 @@ import type { TrackedError } from '@/types/learning';
 type ErrorCategoryFilter = 'all' | 'grammar' | 'vocabulary' | 'preposition' | 'verb-tense';
 
 export function MyErrorsScreen() {
-  const { progress } = useProgress();
+  const { progress, dismissTrackedError, addExperience } = useProgress();
   const [filter, setFilter] = useState<ErrorCategoryFilter>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -29,6 +29,11 @@ export function MyErrorsScreen() {
     'verb-tense': 'Tiempos Verbales',
   };
 
+  const handleDismiss = (errorId: string) => {
+    dismissTrackedError(errorId);
+    addExperience(10);
+  };
+
   return (
     <ScreenContainer title="Mis Errores">
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
@@ -38,7 +43,7 @@ export function MyErrorsScreen() {
           <View style={styles.heroContent}>
             <Text style={styles.heroTitle}>Aprende de tus errores</Text>
             <Text style={styles.heroSubtitle}>
-              La forma más rápida de hablar con fluidez es revisar lo que te cuesta.
+              Revisa tus fallos registrados en conversaciones y márcalos como dominados para ganar +10 XP.
             </Text>
           </View>
         </View>
@@ -79,12 +84,20 @@ export function MyErrorsScreen() {
                   <View style={styles.categoryBadge}>
                     <Text style={styles.categoryText}>{categoryLabels[error.category as ErrorCategoryFilter] ?? 'Gramática'}</Text>
                   </View>
-                  <Pressable
-                    style={styles.audioButton}
-                    onPress={() => speakText(error.correctedText, { language: error.language })}
-                  >
-                    <Text style={styles.audioIcon}>🔊</Text>
-                  </Pressable>
+                  <View style={styles.audioButtonGroup}>
+                    <Pressable
+                      style={styles.audioButtonSmall}
+                      onPress={() => speakText(error.correctedText, { language: error.language, rate: 0.6 })}
+                    >
+                      <Text style={styles.audioIcon}>🐢</Text>
+                    </Pressable>
+                    <Pressable
+                      style={styles.audioButton}
+                      onPress={() => speakText(error.correctedText, { language: error.language, rate: 0.85 })}
+                    >
+                      <Text style={styles.audioIcon}>🔊</Text>
+                    </Pressable>
+                  </View>
                 </View>
 
                 <View style={styles.phraseRow}>
@@ -111,6 +124,15 @@ export function MyErrorsScreen() {
                     <Text style={styles.explanationText}>📖 {error.explanation}</Text>
                   </View>
                 )}
+
+                <View style={styles.cardActionRow}>
+                  <Pressable
+                    style={styles.dismissBtn}
+                    onPress={() => handleDismiss(error.id)}
+                  >
+                    <Text style={styles.dismissBtnText}>✓ Marcar Dominado (+10 XP)</Text>
+                  </Pressable>
+                </View>
               </View>
             );
           })
@@ -170,6 +192,15 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   categoryText: { color: AppColors.primaryBright, fontSize: 12, fontWeight: '800' },
+  audioButtonGroup: { flexDirection: 'row', gap: 6 },
+  audioButtonSmall: {
+    backgroundColor: AppColors.surfaceRaised,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   audioButton: {
     backgroundColor: AppColors.surfaceRaised,
     width: 36,
@@ -193,6 +224,24 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   explanationText: { color: AppColors.text, fontSize: 13, lineHeight: 19 },
+  cardActionRow: {
+    marginTop: 6,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  dismissBtn: {
+    backgroundColor: 'rgba(34, 197, 94, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(34, 197, 94, 0.4)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
+  },
+  dismissBtnText: {
+    color: AppColors.success,
+    fontSize: 12,
+    fontWeight: '800',
+  },
   emptyCard: {
     backgroundColor: AppColors.surface,
     borderRadius: 20,
