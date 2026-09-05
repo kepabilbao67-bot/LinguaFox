@@ -6,6 +6,7 @@ import type { LanguageCode, ProgressState, TrackedError } from '@/types/learning
 import { calculateQuizStars } from '@/utils/rewards';
 import { evaluateAchievements } from '@/data/achievements';
 import { calculateNewStreak } from '@/utils/streak-logic';
+import { reviewCard } from '@/utils/srs';
 import { safeLoadProgress, sanitizeProgress, DEFAULT_PROGRESS, STORAGE_KEY, getGlobalStars } from '@/utils/progress-storage';
 
 // Keep the splash screen visible while we fetch resources
@@ -24,6 +25,8 @@ interface ProgressContextValue {
   latestAchievementId: string | null;
   completeOnboarding: () => void;
   addTrackedError: (error: TrackedError) => void;
+  dismissTrackedError: (errorId: string) => void;
+  recordSRSReview: (cardKey: string, quality: number, initialData?: { en: string; es: string; ipa?: string }) => void;
   addExperience: (xp: number) => void;
   incrementSpokenPhrases: () => void;
   unlockCity: (cityId: string) => void;
@@ -221,6 +224,43 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
     });
   }, []);
 
+  const dismissTrackedError = useCallback((errorId: string) => {
+    setProgress((current) => ({
+      ...current,
+      trackedErrors: (current.trackedErrors ?? []).filter((e) => e.id !== errorId),
+    }));
+  }, []);
+
+  const recordSRSReview = useCallback(
+    (cardKey: string, quality: number, initialData?: { en: string; es: string; ipa?: string }) => {
+      setProgress((current) => {
+        const existingCard = current.srs[cardKey] ?? {
+          en: initialData?.en ?? cardKey,
+          es: initialData?.es ?? cardKey,
+          ipa: initialData?.ipa,
+          repetitions: 0,
+          interval: 0,
+          easeFactor: 2.5,
+          dueDate: Date.now(),
+          lastReviewed: 0,
+        };
+
+        const updatedCard = reviewCard(existingCard, quality, Date.now());
+
+        return {
+          ...current,
+          ...calculateNewStreak(current, Date.now()),
+          experiencia: current.experiencia + 10,
+          srs: {
+            ...current.srs,
+            [cardKey]: updatedCard,
+          },
+        };
+      });
+    },
+    [],
+  );
+
   const completeScenario = useCallback((scenarioId: string) => {
     setProgress((current) => {
       const completed = current.completedScenarios ?? [];
@@ -258,6 +298,8 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
       setLanguages,
       resetProgress,
       addTrackedError,
+      dismissTrackedError,
+      recordSRSReview,
       addExperience,
       incrementSpokenPhrases,
       unlockCity,
@@ -274,6 +316,8 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
       setLanguages,
       setLessonProgress,
       addTrackedError,
+      dismissTrackedError,
+      recordSRSReview,
       addExperience,
       incrementSpokenPhrases,
       unlockCity,

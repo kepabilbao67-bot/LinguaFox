@@ -243,7 +243,26 @@ export function HomeScreen() {
             <Text style={styles.hubCardDesc}>Estudio fonético con audio</Text>
           </Pressable>
 
-          {/* Repaso Inteligente / Mis Errores */}
+          {/* Repaso SRS Inteligente */}
+          <Pressable
+            style={({ pressed }) => [styles.hubCard, pressed && styles.pressed]}
+            onPress={() => router.push('/review')}
+          >
+            <View style={styles.hubBadgeRow}>
+              <Text style={styles.hubCardIcon}>🧠</Text>
+              {srsDueCardsCount > 0 && (
+                <View style={[styles.miniBadge, { backgroundColor: '#3B82F6' }]}>
+                  <Text style={styles.miniBadgeText}>{srsDueCardsCount}</Text>
+                </View>
+              )}
+            </View>
+            <Text style={styles.hubCardTitle}>Repaso SRS</Text>
+            <Text style={styles.hubCardDesc}>
+              {srsDueCardsCount > 0 ? `${srsDueCardsCount} tarjetas SuperMemo-2` : 'Memoria espaciada'}
+            </Text>
+          </Pressable>
+
+          {/* Mis Errores */}
           <Pressable
             style={({ pressed }) => [styles.hubCard, pressed && styles.pressed]}
             onPress={() => router.push('/errors')}
@@ -256,9 +275,9 @@ export function HomeScreen() {
                 </View>
               )}
             </View>
-            <Text style={styles.hubCardTitle}>Repaso & Errores</Text>
+            <Text style={styles.hubCardTitle}>Mis Errores</Text>
             <Text style={styles.hubCardDesc}>
-              {pendingErrorsCount > 0 ? `${pendingErrorsCount} fallos a reforzar` : srsDueCardsCount > 0 ? `${srsDueCardsCount} palabras en SRS` : 'Memoria activa SRS'}
+              {pendingErrorsCount > 0 ? `${pendingErrorsCount} fallos a reforzar` : 'Banco de correcciones'}
             </Text>
           </Pressable>
 
@@ -300,6 +319,26 @@ export function HomeScreen() {
             <Text style={styles.hubCardIcon}>📈</Text>
             <Text style={styles.hubCardTitle}>Progreso CEFR</Text>
             <Text style={styles.hubCardDesc}>Ruta de dominio A1 → C2</Text>
+          </Pressable>
+
+          {/* Logros y Trofeos */}
+          <Pressable
+            style={({ pressed }) => [styles.hubCard, pressed && styles.pressed]}
+            onPress={() => router.push('/achievements')}
+          >
+            <Text style={styles.hubCardIcon}>🏆</Text>
+            <Text style={styles.hubCardTitle}>Logros</Text>
+            <Text style={styles.hubCardDesc}>Trofeos e insignias</Text>
+          </Pressable>
+
+          {/* Modo Kids */}
+          <Pressable
+            style={({ pressed }) => [styles.hubCard, pressed && styles.pressed]}
+            onPress={() => router.push('/kids')}
+          >
+            <Text style={styles.hubCardIcon}>🦊</Text>
+            <Text style={styles.hubCardTitle}>LinguaFox Kids</Text>
+            <Text style={styles.hubCardDesc}>Modo visual infantil</Text>
           </Pressable>
         </View>
 
