@@ -8,6 +8,7 @@ import { ErrorExplanationCard } from '@/components/ErrorExplanationCard';
 import { AppColors } from '@/constants/app-theme';
 import { useTheme, type ThemeColors } from '@/theme/theme-context';
 import { useQuiz } from '@/hooks/use-quiz';
+import { useProgress } from '@/hooks/use-progress';
 import { speakText, stopSpeaking } from '@/services/speech';
 import type { Lesson } from '@/types/learning';
 import type { PedagogicalCorrection } from '@/types/pedagogical-correction';
@@ -28,6 +29,7 @@ const POSITIVE_FEEDBACKS = [
 export function QuizScreen({ lesson }: QuizScreenProps) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
+  const { recordCompetencyResult } = useProgress();
   const quiz = useQuiz(lesson);
   const [audioFeedback, setAudioFeedback] = useState<string | null>(null);
   const [speechSpeed, setSpeechSpeed] = useState<SpeechSpeed>('normal');
@@ -103,6 +105,26 @@ export function QuizScreen({ lesson }: QuizScreenProps) {
     setAudioFeedback(ok ? `🔊 Escuchando a velocidad ${speechSpeed}` : 'Audio no disponible');
   };
 
+  const handleAnswer = (option: string) => {
+    if (isAnswered || !question) return;
+    quiz.answer(option);
+    const compType: 'listening' | 'writing' | 'grammar' | 'reading' =
+      question.type === 'listen'
+        ? 'listening'
+        : question.type === 'translate'
+          ? 'writing'
+          : question.type === 'fillBlank'
+            ? 'grammar'
+            : 'reading';
+
+    recordCompetencyResult(
+      lesson.language,
+      lesson.level ?? 'A1',
+      compType,
+      option === question.translation
+    );
+  };
+
   return (
     <ScreenContainer title={`Quiz · ${lesson.title}`}>
       <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
@@ -175,7 +197,7 @@ export function QuizScreen({ lesson }: QuizScreenProps) {
                   { backgroundColor },
                   pressed && !isAnswered && styles.pressed,
                 ]}
-                onPress={() => quiz.answer(option)}
+                onPress={() => handleAnswer(option)}
               >
                 <Text style={styles.optionText}>{option}</Text>
               </Pressable>

@@ -5,9 +5,13 @@ export interface StreakState {
 }
 
 // Devuelve una cadena YYYY-MM-DD usando la fecha local
-export function getLocalDateString(timestamp: number): string {
+export function getLocalDateKey(timestamp: number = Date.now()): string {
   const d = new Date(timestamp);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+export function getLocalDateString(timestamp: number): string {
+  return getLocalDateKey(timestamp);
 }
 
 // Devuelve el "día ordinal" de calendario absoluto. Ignora la hora.

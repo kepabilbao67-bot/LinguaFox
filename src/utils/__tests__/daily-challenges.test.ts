@@ -15,13 +15,20 @@ describe('Daily Challenges Engine', () => {
     expect(challenges.every((c) => !c.completed && !c.claimed)).toBe(true);
   });
 
-  it('detects completed lesson challenge and recognizes claimed status', () => {
+  it('detects completed lesson challenge and recognizes claimed status from today activity', () => {
     const fixedNow = new Date('2026-09-05T10:00:00Z').getTime();
     const today = getTodayDateString(fixedNow);
 
     const progress = {
       ...DEFAULT_PROGRESS,
-      leccionesCompletadas: ['en:unit-1-lesson-1'],
+      activityByDate: {
+        [today]: {
+          lessonsCompleted: 1,
+          chatMessages: 0,
+          spokenPhrases: 0,
+          reviewsCompleted: 0,
+        },
+      },
       dailyChallengeClaims: {
         'daily-lesson': today,
       },
@@ -33,5 +40,25 @@ describe('Daily Challenges Engine', () => {
     expect(lessonChallenge).toBeDefined();
     expect(lessonChallenge?.completed).toBe(true);
     expect(lessonChallenge?.claimed).toBe(true);
+  });
+
+  it('does NOT complete today challenge if activity was done yesterday', () => {
+    const todayTs = new Date('2026-09-05T10:00:00Z').getTime();
+    const yesterdayStr = '2026-09-04';
+
+    const progress = {
+      ...DEFAULT_PROGRESS,
+      activityByDate: {
+        [yesterdayStr]: {
+          lessonsCompleted: 5,
+          chatMessages: 10,
+          spokenPhrases: 8,
+          reviewsCompleted: 4,
+        },
+      },
+    };
+
+    const challenges = getDailyChallenges(progress, todayTs);
+    expect(challenges.every((c) => !c.completed)).toBe(true);
   });
 });

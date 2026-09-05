@@ -1,4 +1,5 @@
 import type { ProgressState } from '@/types/learning';
+import { getLocalDateKey } from './streak-logic';
 
 export interface DailyChallenge {
   id: string;
@@ -13,29 +14,31 @@ export interface DailyChallenge {
 }
 
 export function getTodayDateString(now: number = Date.now()): string {
-  const d = new Date(now);
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  return getLocalDateKey(now);
 }
 
 export function getDailyChallenges(progress: ProgressState, now: number = Date.now()): DailyChallenge[] {
-  const today = getTodayDateString(now);
+  const today = getLocalDateKey(now);
   const claims = progress.dailyChallengeClaims ?? {};
+  const todayActivity = progress.activityByDate?.[today] ?? {
+    lessonsCompleted: 0,
+    chatMessages: 0,
+    spokenPhrases: 0,
+    reviewsCompleted: 0,
+  };
 
-  // 1. Completed Lessons challenge
-  const lessonCount = progress.leccionesCompletadas?.length ?? 0;
+  // 1. Completed Lessons challenge (ONLY today)
+  const lessonCount = todayActivity.lessonsCompleted ?? 0;
   const isLessonCompleted = lessonCount >= 1;
   const isLessonClaimed = claims['daily-lesson'] === today;
 
-  // 2. Chat / Conversation challenge
-  const chatMessages = progress.mensajesPersonajes ?? 0;
+  // 2. Chat / Conversation challenge (ONLY today)
+  const chatMessages = todayActivity.chatMessages ?? 0;
   const isChatCompleted = chatMessages >= 1;
   const isChatClaimed = claims['daily-chat'] === today;
 
-  // 3. Phonetics / Speech practice challenge
-  const spokenCount = progress.spokenPhrasesCount ?? 0;
+  // 3. Phonetics / Speech practice challenge (ONLY today)
+  const spokenCount = todayActivity.spokenPhrases ?? 0;
   const isSpeechCompleted = spokenCount >= 1;
   const isSpeechClaimed = claims['daily-phonetics'] === today;
 
@@ -43,7 +46,7 @@ export function getDailyChallenges(progress: ProgressState, now: number = Date.n
     {
       id: 'daily-lesson',
       title: 'Completar 1 lección',
-      description: 'Supera una lección de vocabulario o gramática.',
+      description: 'Supera una lección de vocabulario o gramática hoy.',
       target: 1,
       current: Math.min(1, lessonCount),
       completed: isLessonCompleted,
@@ -54,7 +57,7 @@ export function getDailyChallenges(progress: ProgressState, now: number = Date.n
     {
       id: 'daily-chat',
       title: 'Charla en Vivo con Fox',
-      description: 'Envía al menos un mensaje al tutor o personajes IA.',
+      description: 'Envía al menos un mensaje al tutor o personajes IA hoy.',
       target: 1,
       current: Math.min(1, chatMessages),
       completed: isChatCompleted,
@@ -65,7 +68,7 @@ export function getDailyChallenges(progress: ProgressState, now: number = Date.n
     {
       id: 'daily-phonetics',
       title: 'Laboratorio de Pronunciación',
-      description: 'Practica la articulación de frases con audio.',
+      description: 'Practica la articulación de frases con audio hoy.',
       target: 1,
       current: Math.min(1, spokenCount),
       completed: isSpeechCompleted,

@@ -33,7 +33,7 @@ export function ChatScreen() {
     initialGreeting?: string;
   }>();
 
-  const { progress, addTrackedError, incrementSpokenPhrases, completeScenario } = useProgress();
+  const { progress, addTrackedError, incrementSpokenPhrases, completeScenario, registerCharacterInteraction } = useProgress();
   const { messages, isHydrated, appendMessage, createMessage } = useChatHistory();
 
   const [draft, setDraft] = useState('');
@@ -90,6 +90,7 @@ export function ChatScreen() {
 
       appendMessage(createMessage('user', cleanText));
       incrementSpokenPhrases();
+      registerCharacterInteraction(params.characterId ?? 'fox', 'chat');
       setDraft('');
       setIsSending(true);
 
@@ -148,7 +149,7 @@ export function ChatScreen() {
         setIsSending(false);
       }
     },
-    [addTrackedError, appendMessage, createMessage, incrementSpokenPhrases, isHydrated, isSending, mode, params.characterId, params.scenarioId, playAudio, progress.idiomaObjetivo, progress.nivelObjetivo],
+    [addTrackedError, appendMessage, createMessage, incrementSpokenPhrases, isHydrated, isSending, mode, params.characterId, params.scenarioId, playAudio, progress.idiomaObjetivo, progress.nivelObjetivo, registerCharacterInteraction],
   );
 
   const handleVoicePrompt = () => {

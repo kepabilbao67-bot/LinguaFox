@@ -2,10 +2,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
 
-import type { LanguageCode, ProgressState, TrackedError } from '@/types/learning';
+import type { CEFRLevel, DailyActivityMetrics, LanguageCode, ProgressState, TrackedError } from '@/types/learning';
 import { calculateQuizStars } from '@/utils/rewards';
 import { ACHIEVEMENTS, evaluateAchievements } from '@/data/achievements';
-import { calculateNewStreak } from '@/utils/streak-logic';
+import { calculateNewStreak, getLocalDateKey } from '@/utils/streak-logic';
 import { reviewCard } from '@/utils/srs';
 import { safeLoadProgress, sanitizeProgress, DEFAULT_PROGRESS, STORAGE_KEY, getGlobalStars } from '@/utils/progress-storage';
 
@@ -26,12 +26,19 @@ interface ProgressContextValue {
   completeOnboarding: () => void;
   addTrackedError: (error: TrackedError) => void;
   dismissTrackedError: (errorId: string) => void;
+  masterTrackedError: (errorId: string) => boolean;
   recordSRSReview: (cardKey: string, quality: number, initialData?: { en: string; es: string; ipa?: string }) => void;
   addExperience: (xp: number) => void;
   incrementSpokenPhrases: () => void;
   unlockCity: (cityId: string) => void;
   completeScenario: (scenarioId: string) => void;
   claimDailyChallenge: (challengeId: string, xpReward?: number) => void;
+  recordCompetencyResult: (
+    language: LanguageCode,
+    level: CEFRLevel,
+    competency: 'reading' | 'listening' | 'grammar' | 'writing' | 'speaking',
+    isCorrect: boolean
+  ) => void;
 }
 
 const ProgressContext = createContext<ProgressContextValue | null>(null);
@@ -148,6 +155,27 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
     progress.unlockedCities?.length,
   ]);
 
+  function recordDailyActivity(
+    activityByDate: Record<string, DailyActivityMetrics> | undefined,
+    field: keyof DailyActivityMetrics,
+    dateKey: string = getLocalDateKey()
+  ): Record<string, DailyActivityMetrics> {
+    const currentRecords = activityByDate ?? {};
+    const currentDay = currentRecords[dateKey] ?? {
+      lessonsCompleted: 0,
+      chatMessages: 0,
+      spokenPhrases: 0,
+      reviewsCompleted: 0,
+    };
+    return {
+      ...currentRecords,
+      [dateKey]: {
+        ...currentDay,
+        [field]: (currentDay[field] ?? 0) + 1,
+      },
+    };
+  }
+
   const setLessonProgress = useCallback((lessonId: string, cardIndex: number) => {
     if (!lessonId || !Number.isFinite(cardIndex)) return;
     setProgress((current) => ({
@@ -179,6 +207,7 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
         ...current.mejoresEstrellasPorLeccion,
         [lessonId]: Math.max(previousBestStars, attemptStars),
       };
+      const todayKey = getLocalDateKey();
 
       return {
         ...current,
@@ -187,6 +216,7 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
         leccionesCompletadas: current.leccionesCompletadas.includes(lessonId)
           ? current.leccionesCompletadas
           : [...current.leccionesCompletadas, lessonId],
+        activityByDate: recordDailyActivity(current.activityByDate, 'lessonsCompleted', todayKey),
         estrellas: getGlobalStars(bestStarsByLesson, current.estrellasPersonajesPorId),
         mejorPuntuacionPorLeccion: {
           ...current.mejorPuntuacionPorLeccion,
@@ -214,6 +244,7 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
         const achievements = new Set(current.logros);
         if (current.personajesConCharla.length === 0) achievements.add('primera-charla');
         if (messages >= 5) achievements.add('charlador');
+        const todayKey = getLocalDateKey();
 
         return {
           ...current,
@@ -226,6 +257,9 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
           personajesConCharla: isFirstChatWithCharacter
             ? [...current.personajesConCharla, characterId]
             : current.personajesConCharla,
+          activityByDate: type === 'chat'
+            ? recordDailyActivity(current.activityByDate, 'chatMessages', todayKey)
+            : current.activityByDate,
         };
       });
     },
@@ -254,10 +288,12 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
   }, []);
 
   const incrementSpokenPhrases = useCallback(() => {
+    const todayKey = getLocalDateKey();
     setProgress((current) => ({
       ...current,
       spokenPhrasesCount: (current.spokenPhrasesCount ?? 0) + 1,
       experiencia: current.experiencia + 3,
+      activityByDate: recordDailyActivity(current.activityByDate, 'spokenPhrases', todayKey),
     }));
   }, []);
 
@@ -279,6 +315,29 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
     }));
   }, []);
 
+  const masterTrackedError = useCallback((errorId: string): boolean => {
+    let wasMastered = false;
+    setProgress((current) => {
+      const list = current.trackedErrors ?? [];
+      const target = list.find((e) => e.id === errorId);
+      if (!target || target.mastered || target.masteryXpGranted) {
+        return current;
+      }
+      wasMastered = true;
+      const nowStr = new Date().toISOString();
+      return {
+        ...current,
+        experiencia: current.experiencia + 10,
+        trackedErrors: list.map((e) =>
+          e.id === errorId
+            ? { ...e, mastered: true, masteredAt: nowStr, masteryXpGranted: true, reviewed: true }
+            : e
+        ),
+      };
+    });
+    return wasMastered;
+  }, []);
+
   const recordSRSReview = useCallback(
     (cardKey: string, quality: number, initialData?: { en: string; es: string; ipa?: string }) => {
       setProgress((current) => {
@@ -294,6 +353,7 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
         };
 
         const updatedCard = reviewCard(existingCard, quality, Date.now());
+        const todayKey = getLocalDateKey();
 
         return {
           ...current,
@@ -303,6 +363,7 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
             ...current.srs,
             [cardKey]: updatedCard,
           },
+          activityByDate: recordDailyActivity(current.activityByDate, 'reviewsCompleted', todayKey),
         };
       });
     },
@@ -323,8 +384,7 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
 
   const claimDailyChallenge = useCallback((challengeId: string, xpReward: number = 20) => {
     if (!challengeId) return;
-    const now = new Date();
-    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const today = getLocalDateKey();
 
     setProgress((current) => {
       const claims = current.dailyChallengeClaims ?? {};
@@ -342,6 +402,37 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
       };
     });
   }, []);
+
+  const recordCompetencyResult = useCallback(
+    (
+      language: LanguageCode,
+      level: CEFRLevel,
+      competency: 'reading' | 'listening' | 'grammar' | 'writing' | 'speaking',
+      isCorrect: boolean
+    ) => {
+      setProgress((current) => {
+        const key = `${language}:${level}`;
+        const currentStats = current.competencyStats ?? {};
+        const levelStats = currentStats[key] ?? {};
+        const compStat = levelStats[competency] ?? { correct: 0, total: 0 };
+
+        return {
+          ...current,
+          competencyStats: {
+            ...currentStats,
+            [key]: {
+              ...levelStats,
+              [competency]: {
+                total: compStat.total + 1,
+                correct: compStat.correct + (isCorrect ? 1 : 0),
+              },
+            },
+          },
+        };
+      });
+    },
+    [],
+  );
 
   const setLanguages = useCallback((nativo: LanguageCode, objetivo: LanguageCode) => {
     setProgress((current) => ({ ...current, idiomaNativo: nativo, idiomaObjetivo: objetivo }));
@@ -369,12 +460,14 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
       resetProgress,
       addTrackedError,
       dismissTrackedError,
+      masterTrackedError,
       recordSRSReview,
       addExperience,
       incrementSpokenPhrases,
       unlockCity,
       completeScenario,
       claimDailyChallenge,
+      recordCompetencyResult,
     }),
     [
       isHydrated,
@@ -388,12 +481,14 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
       setLessonProgress,
       addTrackedError,
       dismissTrackedError,
+      masterTrackedError,
       recordSRSReview,
       addExperience,
       incrementSpokenPhrases,
       unlockCity,
       completeScenario,
       claimDailyChallenge,
+      recordCompetencyResult,
     ],
   );
 

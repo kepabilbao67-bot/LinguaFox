@@ -179,6 +179,29 @@ export interface TrackedError {
   language: LanguageCode;
   timestamp: number;
   reviewed: boolean;
+  mastered?: boolean;
+  masteredAt?: string;
+  masteryXpGranted?: boolean;
+}
+
+export interface DailyActivityMetrics {
+  lessonsCompleted: number;
+  chatMessages: number;
+  spokenPhrases: number;
+  reviewsCompleted: number;
+}
+
+export interface CompetencyCount {
+  correct: number;
+  total: number;
+}
+
+export interface CompetencyStatsByLevel {
+  reading?: CompetencyCount;
+  listening?: CompetencyCount;
+  grammar?: CompetencyCount;
+  writing?: CompetencyCount;
+  speaking?: CompetencyCount;
 }
 
 export interface ProgressState {
@@ -213,6 +236,8 @@ export interface ProgressState {
   spokenPhrasesCount?: number;
   logrosXpOtorgados?: readonly string[];
   dailyChallengeClaims?: Record<string, string>;
+  activityByDate?: Record<string, DailyActivityMetrics>;
+  competencyStats?: Record<string, CompetencyStatsByLevel>;
 }
 
 export interface QuizReward {

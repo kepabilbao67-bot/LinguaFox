@@ -60,14 +60,64 @@ describe('CEFR Competencies Calculation', () => {
       progress: progressWithOneLesson,
     });
 
-    // 1 of 2 lessons = 50%
-    expect(result.reading).toBe(50);
-    expect(result.listening).toBe(50);
     // 2 words of 4 total words = 50%
     expect(result.vocabulary).toBe(50);
-    // Score 5/5 = 100%
-    expect(result.grammar).toBe(100);
-    expect(result.writing).toBe(40); // 1/2 * 80
+    // Without specific telemetry, Reading, Listening, Grammar, Writing are strictly null
+    expect(result.reading).toBeNull();
+    expect(result.listening).toBeNull();
+    expect(result.grammar).toBeNull();
+    expect(result.writing).toBeNull();
     expect(result.speakingRecorded).toBe(4);
+  });
+
+  it('calculates independent telemetry for specific competencies based on real correct/total ratios', () => {
+    const progressWithTelemetry = {
+      ...DEFAULT_PROGRESS,
+      leccionesCompletadas: ['en:unit-1-lesson-1'],
+      spokenPhrasesCount: 6,
+      competencyStats: {
+        'en:A1': {
+          reading: { correct: 8, total: 10 },
+          listening: { correct: 3, total: 4 },
+          grammar: { correct: 5, total: 5 },
+          writing: { correct: 2, total: 4 },
+        },
+      },
+    };
+
+    const result = calculateLevelCompetencies({
+      level: 'A1',
+      levelLessons: sampleLessons,
+      progress: progressWithTelemetry,
+    });
+
+    expect(result.reading).toBe(80); // 8/10
+    expect(result.listening).toBe(75); // 3/4
+    expect(result.grammar).toBe(100); // 5/5
+    expect(result.writing).toBe(50); // 2/4
+    expect(result.vocabulary).toBe(50); // 2 of 4 words
+    expect(result.speakingRecorded).toBe(6);
+  });
+
+  it('ensures Listening is independent and does not change when only Reading was performed', () => {
+    const progressReadingOnly = {
+      ...DEFAULT_PROGRESS,
+      competencyStats: {
+        'en:A1': {
+          reading: { correct: 4, total: 5 },
+        },
+      },
+    };
+
+    const result = calculateLevelCompetencies({
+      level: 'A1',
+      levelLessons: sampleLessons,
+      progress: progressReadingOnly,
+    });
+
+    expect(result.reading).toBe(80);
+    expect(result.listening).toBeNull(); // Strictly null, not influenced by reading
+    expect(result.grammar).toBeNull();
+    expect(result.writing).toBeNull();
   });
 });

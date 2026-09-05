@@ -10,6 +10,8 @@ import { levelFromXp, xpIntoLevel } from '@/utils/rewards';
 import { ACHIEVEMENTS } from '@/data/achievements';
 import { getLessonsByLanguage } from '@/data/lessons';
 
+import { getLocalDateKey } from '@/utils/streak-logic';
+
 const LANGUAGE_LABELS: Record<string, string> = {
   en: '🇬🇧 Inglés',
   es: '🇪🇸 Español',
@@ -41,25 +43,37 @@ export function ProfileScreen() {
   const srsCardsCount = Object.keys(progress.srs ?? {}).length;
   const trackedErrorsCount = progress.trackedErrors?.length ?? 0;
 
-  // 7-day streak visualizer
+  // 7-day streak visualizer based on real activityByDate
   const past7Days = useMemo(() => {
     const today = new Date();
     const days = [];
     const dayNames = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
+    const activity = progress.activityByDate ?? {};
+
     for (let i = 6; i >= 0; i--) {
       const d = new Date(today);
       d.setDate(today.getDate() - i);
       const isToday = i === 0;
-      const isActive = i < progress.rachaActual;
+      const dateKey = getLocalDateKey(d.getTime());
+      const dayActivity = activity[dateKey];
+      const isActive = !!(
+        dayActivity &&
+        ((dayActivity.lessonsCompleted ?? 0) > 0 ||
+         (dayActivity.chatMessages ?? 0) > 0 ||
+         (dayActivity.spokenPhrases ?? 0) > 0 ||
+         (dayActivity.reviewsCompleted ?? 0) > 0)
+      );
+
       days.push({
         label: dayNames[d.getDay()],
         dateNum: d.getDate(),
+        dateKey,
         isToday,
         isActive,
       });
     }
     return days;
-  }, [progress.rachaActual]);
+  }, [progress.activityByDate]);
 
   return (
     <ScreenContainer title="Mi Perfil" isLoading={!isHydrated}>

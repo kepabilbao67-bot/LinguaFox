@@ -1,4 +1,14 @@
-import type { AppSettings, CrownLevel, LanguageCode, LessonCrown, ProgressState, SRSCard } from '@/types/learning';
+import type {
+  AppSettings,
+  CompetencyStatsByLevel,
+  CrownLevel,
+  DailyActivityMetrics,
+  LanguageCode,
+  LessonCrown,
+  ProgressState,
+  SRSCard,
+  TrackedError,
+} from '@/types/learning';
 import { sumBestStars } from './rewards';
 import { getCalendarOrdinal } from './streak-logic';
 
@@ -33,6 +43,14 @@ export const DEFAULT_PROGRESS: ProgressState = {
   coins: 0,
   crowns: {},
   srs: {},
+  trackedErrors: [],
+  unlockedCities: [],
+  completedScenarios: [],
+  spokenPhrasesCount: 0,
+  logrosXpOtorgados: [],
+  dailyChallengeClaims: {},
+  activityByDate: {},
+  competencyStats: {},
 };
 
 export function getGlobalStars(
@@ -112,6 +130,64 @@ function sanitizeSrs(input: unknown): Record<string, SRSCard> {
   }, {});
 }
 
+function sanitizeActivityByDate(input: unknown): Record<string, DailyActivityMetrics> {
+  if (typeof input !== 'object' || input === null || Array.isArray(input)) return {};
+  return Object.entries(input).reduce<Record<string, DailyActivityMetrics>>((acc, [k, v]) => {
+    if (typeof v === 'object' && v !== null) {
+      const m = v as Partial<DailyActivityMetrics>;
+      acc[k] = {
+        lessonsCompleted: typeof m.lessonsCompleted === 'number' && Number.isFinite(m.lessonsCompleted) ? Math.max(0, Math.floor(m.lessonsCompleted)) : 0,
+        chatMessages: typeof m.chatMessages === 'number' && Number.isFinite(m.chatMessages) ? Math.max(0, Math.floor(m.chatMessages)) : 0,
+        spokenPhrases: typeof m.spokenPhrases === 'number' && Number.isFinite(m.spokenPhrases) ? Math.max(0, Math.floor(m.spokenPhrases)) : 0,
+        reviewsCompleted: typeof m.reviewsCompleted === 'number' && Number.isFinite(m.reviewsCompleted) ? Math.max(0, Math.floor(m.reviewsCompleted)) : 0,
+      };
+    }
+    return acc;
+  }, {});
+}
+
+function sanitizeCompetencyStats(input: unknown): Record<string, CompetencyStatsByLevel> {
+  if (typeof input !== 'object' || input === null || Array.isArray(input)) return {};
+  return Object.entries(input).reduce<Record<string, CompetencyStatsByLevel>>((acc, [k, v]) => {
+    if (typeof v === 'object' && v !== null) {
+      const statsObj = v as Partial<CompetencyStatsByLevel>;
+      const sanitizedLevel: CompetencyStatsByLevel = {};
+      for (const comp of ['reading', 'listening', 'grammar', 'writing', 'speaking'] as const) {
+        const item = statsObj[comp];
+        if (typeof item === 'object' && item !== null) {
+          sanitizedLevel[comp] = {
+            correct: typeof item.correct === 'number' && Number.isFinite(item.correct) ? Math.max(0, Math.floor(item.correct)) : 0,
+            total: typeof item.total === 'number' && Number.isFinite(item.total) ? Math.max(0, Math.floor(item.total)) : 0,
+          };
+        }
+      }
+      acc[k] = sanitizedLevel;
+    }
+    return acc;
+  }, {});
+}
+
+function sanitizeTrackedErrors(input: unknown): TrackedError[] {
+  if (!Array.isArray(input)) return [];
+  const validCategories = new Set(['grammar', 'vocabulary', 'preposition', 'verb-tense', 'pronunciation']);
+  return input
+    .filter((e): e is Record<string, unknown> => typeof e === 'object' && e !== null)
+    .filter((e) => typeof e.id === 'string' && typeof e.userText === 'string' && typeof e.correctedText === 'string')
+    .map((e) => ({
+      id: String(e.id),
+      userText: String(e.userText),
+      correctedText: String(e.correctedText),
+      explanation: typeof e.explanation === 'string' ? e.explanation : '',
+      category: validCategories.has(String(e.category)) ? (e.category as any) : 'grammar',
+      language: (typeof e.language === 'string' ? e.language : 'en') as LanguageCode,
+      timestamp: typeof e.timestamp === 'number' ? e.timestamp : Date.now(),
+      reviewed: e.reviewed === true,
+      mastered: e.mastered === true,
+      masteredAt: typeof e.masteredAt === 'string' ? e.masteredAt : undefined,
+      masteryXpGranted: e.masteryXpGranted === true,
+    }));
+}
+
 export function sanitizeProgress(raw: unknown): ProgressState {
   if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return DEFAULT_PROGRESS;
 
@@ -186,6 +262,14 @@ export function sanitizeProgress(raw: unknown): ProgressState {
     coins,
     crowns: sanitizeCrowns(value.crowns),
     srs: sanitizeSrs(value.srs),
+    trackedErrors: sanitizeTrackedErrors(value.trackedErrors),
+    unlockedCities: sanitizeStringList(value.unlockedCities),
+    completedScenarios: sanitizeStringList(value.completedScenarios),
+    spokenPhrasesCount: typeof value.spokenPhrasesCount === 'number' && Number.isFinite(value.spokenPhrasesCount) ? Math.max(0, Math.floor(value.spokenPhrasesCount)) : 0,
+    logrosXpOtorgados: sanitizeStringList(value.logrosXpOtorgados),
+    dailyChallengeClaims: sanitizeStringRecord(value.dailyChallengeClaims),
+    activityByDate: sanitizeActivityByDate(value.activityByDate),
+    competencyStats: sanitizeCompetencyStats(value.competencyStats),
   };
 }
 
