@@ -12,7 +12,7 @@ import { useProgress } from '@/hooks/use-progress';
 export function KidsScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const { progress, addExperience } = useProgress();
+  const { progress, addExperience, incrementSpokenPhrases } = useProgress();
 
   const [selectedTopic, setSelectedTopic] = useState<KidsTopic>(KIDS_TOPICS[0]);
   const [activeItemIndex, setActiveItemIndex] = useState(0);
@@ -23,6 +23,7 @@ export function KidsScreen() {
 
   const playWordAudio = (word: string) => {
     speakText(word, { language: progress.idiomaObjetivo ?? 'en', rate: 0.75 });
+    incrementSpokenPhrases();
   };
 
   const nextCard = () => {
@@ -47,7 +48,7 @@ export function KidsScreen() {
               <Text style={styles.kidsSubtitle}>Toca, escucha y repite</Text>
             </View>
           </View>
-          <View style={styles.starsPill}>
+          <View style={styles.starsPill} accessibilityLabel={`${starsEarned} estrellas ganadas hoy`}>
             <Text style={styles.starsPillText}>⭐ {starsEarned}</Text>
           </View>
         </View>
@@ -59,6 +60,9 @@ export function KidsScreen() {
             return (
               <Pressable
                 key={topic.id}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: isSelected }}
+                accessibilityLabel={`Tema infantil: ${topic.title}`}
                 style={[
                   styles.topicButton,
                   { backgroundColor: isSelected ? topic.color : colors.surfaceRaised },
@@ -78,7 +82,11 @@ export function KidsScreen() {
         </ScrollView>
 
         {/* Big Interactive Kids Flashcard */}
-        <View style={[styles.bigCard, { borderColor: selectedTopic.color }]}>
+        <View
+          style={[styles.bigCard, { borderColor: selectedTopic.color }]}
+          accessible={true}
+          accessibilityLabel={`Palabra: ${activeItem.en}, significa ${activeItem.es}, pronunciación ${activeItem.phonetic}`}
+        >
           <Text style={styles.cardEmoji}>{activeItem.emoji}</Text>
           <Text style={styles.cardWordEn}>{activeItem.en}</Text>
           <Text style={styles.cardPhonetic}>/{activeItem.phonetic}/</Text>
@@ -86,28 +94,38 @@ export function KidsScreen() {
 
           {/* Audio & Repeat Button */}
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Escuchar pronunciación de ${activeItem.en}`}
+            accessibilityHint="Reproduce la pronunciación nativa a velocidad adaptada para niños"
             style={[styles.bigAudioBtn, { backgroundColor: selectedTopic.color }]}
             onPress={() => playWordAudio(activeItem.en)}
           >
-            <Text style={styles.bigAudioBtnText}>🔊 Escuchar en Inglés</Text>
+            <Text style={styles.bigAudioBtnText}>🔊 Escuchar Pronunciación</Text>
           </Pressable>
         </View>
 
         {feedback && (
-          <View style={styles.feedbackBanner}>
+          <View style={styles.feedbackBanner} accessibilityLiveRegion="polite">
             <Text style={styles.feedbackText}>{feedback}</Text>
           </View>
         )}
 
         {/* Big Next Button */}
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Siguiente palabra"
           style={({ pressed }) => [styles.nextCardBtn, pressed && styles.pressed]}
           onPress={nextCard}
         >
           <Text style={styles.nextCardBtnText}>Siguiente Palabra ➔</Text>
         </Pressable>
 
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Volver al menú principal"
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
           <Text style={styles.backText}>Volver al Menú Principal</Text>
         </Pressable>
       </ScrollView>
