@@ -9,5 +9,5 @@ export const META_EN_ES: CourseMeta = {
   ttsLang: 'en-US',
   direction: 'ltr',
   available: true,
-  description: 'Curso completo de inglés desde A1 hasta C1 con lecciones, audio y fonética.',
+  description: 'Curso completo de inglés desde A1 hasta C2 con lecciones, audio y fonética.',
 };
