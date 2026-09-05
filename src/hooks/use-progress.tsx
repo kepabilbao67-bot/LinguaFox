@@ -7,7 +7,7 @@ import { calculateQuizStars } from '@/utils/rewards';
 import { ACHIEVEMENTS, evaluateAchievements } from '@/data/achievements';
 import { calculateNewStreak, getLocalDateKey } from '@/utils/streak-logic';
 import { reviewCard } from '@/utils/srs';
-import { safeLoadProgress, sanitizeProgress, DEFAULT_PROGRESS, STORAGE_KEY, getGlobalStars } from '@/utils/progress-storage';
+import { safeLoadProgress, sanitizeProgress, DEFAULT_PROGRESS, STORAGE_KEY, getGlobalStars, LEGACY_PRONUNCIATION_CHALLENGE_IDS } from '@/utils/progress-storage';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync().catch(() => {
@@ -310,15 +310,16 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
     }));
   }, []);
 
-  const recordPronunciationPractice = useCallback((challengeId: string): boolean => {
+  const recordPronunciationPractice = useCallback((challengeId: string) => {
     if (!challengeId) return false;
     let awarded = false;
     const nowStr = new Date().toISOString();
     const todayKey = getLocalDateKey();
+    const canonicalId = LEGACY_PRONUNCIATION_CHALLENGE_IDS[challengeId] ?? challengeId;
 
     setProgress((current) => {
       const completed = current.completedPronunciationChallenges ?? {};
-      if (completed[challengeId]) {
+      if (completed[canonicalId]) {
         return current; // Idempotent: already completed, 0 XP
       }
       awarded = true;
@@ -329,7 +330,7 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
         experiencia: current.experiencia + 15,
         completedPronunciationChallenges: {
           ...completed,
-          [challengeId]: nowStr,
+          [canonicalId]: nowStr,
         },
         activityByDate: recordDailyActivity(current.activityByDate, 'spokenPhrases', todayKey),
       };

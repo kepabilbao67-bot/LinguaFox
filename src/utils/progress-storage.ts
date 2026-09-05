@@ -78,6 +78,52 @@ function sanitizeStringRecord(input: unknown): Record<string, string> {
   }, {});
 }
 
+export const LEGACY_PRONUNCIATION_CHALLENGE_IDS: Record<string, string> = {
+  'en-1': 'en-w-coffee',
+  'en-2': 'en-th-third',
+  'en-3': 'en-stress-hotel',
+  'es-1': 'es-rr-perro',
+  'es-2': 'es-clusters-fruta',
+  'fr-1': 'fr-r-croissant',
+  'fr-2': 'fr-vowels-tour',
+  'it-1': 'it-double-cappuccino',
+  'it-2': 'it-zz-piazza',
+  'de-1': 'de-ch-wasser',
+  'de-2': 'de-sch-entschuldigung',
+  'pt-1': 'pt-nasal-pao',
+  'eu-1': 'eu-affricates-kafe',
+  'ca-1': 'ca-neutral-cafe',
+};
+
+export function sanitizeCompletedPronunciationChallenges(input: unknown): Record<string, string> {
+  if (typeof input !== 'object' || input === null || Array.isArray(input)) return {};
+
+  const result: Record<string, string> = {};
+
+  for (const [rawKey, val] of Object.entries(input)) {
+    if (typeof val !== 'string' || !val.trim()) continue;
+    const cleanVal = val.trim();
+    const targetKey = LEGACY_PRONUNCIATION_CHALLENGE_IDS[rawKey] ?? rawKey;
+
+    const existing = result[targetKey];
+    if (!existing) {
+      result[targetKey] = cleanVal;
+    } else {
+      // If both exist (e.g. legacy and new ID both present), keep one.
+      // Prefer the valid date format if one is valid and the other is not.
+      const isExistingDate = /^\d{4}-\d{2}-\d{2}/.test(existing);
+      const isNewDate = /^\d{4}-\d{2}-\d{2}/.test(cleanVal);
+
+      if (!isExistingDate && isNewDate) {
+        result[targetKey] = cleanVal;
+      }
+      // If existing is already a valid date, keep existing.
+    }
+  }
+
+  return result;
+}
+
 function sanitizeStringList(input: unknown): string[] {
   if (!Array.isArray(input)) return [];
   const list = input.filter((item): item is string => typeof item === 'string');
@@ -274,7 +320,7 @@ export function sanitizeProgress(raw: unknown): ProgressState {
     dailyChallengeClaims: sanitizeStringRecord(value.dailyChallengeClaims),
     activityByDate: sanitizeActivityByDate(value.activityByDate),
     competencyStats: sanitizeCompetencyStats(value.competencyStats),
-    completedPronunciationChallenges: sanitizeStringRecord(value.completedPronunciationChallenges),
+    completedPronunciationChallenges: sanitizeCompletedPronunciationChallenges(value.completedPronunciationChallenges),
   };
 }
 
