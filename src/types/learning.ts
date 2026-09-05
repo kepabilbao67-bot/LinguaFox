@@ -240,6 +240,7 @@ export interface ProgressState {
   dailyChallengeClaims?: Record<string, string>;
   activityByDate?: Record<string, DailyActivityMetrics>;
   competencyStats?: Record<string, CompetencyStatsByLevel>;
+  completedPronunciationChallenges?: Record<string, string>;
 }
 
 export interface QuizReward {

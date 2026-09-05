@@ -86,7 +86,7 @@ export function LessonScreen({ lesson }: LessonScreenProps) {
   };
 
   return (
-    <ScreenContainer title={lesson.title} isLoading={!isHydrated}>
+    <ScreenContainer title={lesson.title} isLoading={!isHydrated} scrollable={false}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         {/* Progress Bar Header */}
         <View style={styles.headerProgressRow}>

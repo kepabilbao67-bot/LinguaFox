@@ -7,25 +7,44 @@ import { AppColors } from '@/constants/app-theme';
 interface ScreenContainerProps extends PropsWithChildren {
   title?: string;
   isLoading?: boolean;
+  scrollable?: boolean;
 }
 
-export function ScreenContainer({ children, title, isLoading = false }: ScreenContainerProps) {
+export function ScreenContainer({
+  children,
+  title,
+  isLoading = false,
+  scrollable = true,
+}: ScreenContainerProps) {
+  const content = (
+    <>
+      {title ? <Text style={styles.title}>{title}</Text> : null}
+      {isLoading ? (
+        <View style={styles.loading}>
+          <ActivityIndicator color={AppColors.primaryBright} size="large" />
+          <Text style={styles.loadingText}>Cargando tu progreso…</Text>
+        </View>
+      ) : (
+        children
+      )}
+    </>
+  );
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'right', 'bottom', 'left']}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled">
-        {title ? <Text style={styles.title}>{title}</Text> : null}
-        {isLoading ? (
-          <View style={styles.loading}>
-            <ActivityIndicator color={AppColors.primaryBright} size="large" />
-            <Text style={styles.loadingText}>Cargando tu progreso…</Text>
-          </View>
-        ) : (
-          children
-        )}
-      </ScrollView>
+      {scrollable ? (
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled">
+          {content}
+        </ScrollView>
+      ) : (
+        <View style={[styles.scrollView, styles.nonScrollContent]}>
+          {content}
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -39,6 +58,13 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     paddingHorizontal: 20,
     paddingBottom: 48,
+  },
+  nonScrollContent: {
+    width: '100%',
+    maxWidth: 720,
+    alignSelf: 'center',
+    paddingHorizontal: 20,
+    flex: 1,
   },
   title: {
     color: AppColors.primaryBright,

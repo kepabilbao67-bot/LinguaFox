@@ -97,4 +97,35 @@ describe('fetchTutorReply (Local)', () => {
     const deResult = await fetchTutorReply('danke', { targetLanguage: 'de' });
     expect(deResult?.text).toContain('Gern geschehen!');
   });
+
+  describe('Pedagogical Rules Integrity (11 Rules)', () => {
+    const cases = [
+      { input: 'i goed to school', expectedSub: 'I went', cat: 'verb-tense' },
+      { input: 'i am agree with you', expectedSub: 'I agree', cat: 'grammar' },
+      { input: 'i have 25 years', expectedSub: 'I am 25 years old', cat: 'grammar' },
+      { input: 'i no understand this', expectedSub: "I don't understand", cat: 'grammar' },
+      { input: 'she have a car', expectedSub: 'She has', cat: 'grammar' },
+      { input: 'he have a dog', expectedSub: 'He has', cat: 'grammar' },
+      { input: 'it depend of you', expectedSub: 'depend on', cat: 'preposition' },
+      { input: 'i listen music', expectedSub: 'listen to music', cat: 'preposition' },
+      { input: 'the people is nice', expectedSub: 'people are', cat: 'grammar' },
+      { input: 'please explain me the rule', expectedSub: 'explain to me', cat: 'preposition' },
+      { input: 'i prefer tea than coffee', expectedSub: 'prefer tea to coffee', cat: 'grammar' },
+    ];
+
+    cases.forEach(({ input, expectedSub, cat }) => {
+      it(`verifica regla para: "${input}"`, () => {
+        const corr = createPedagogicalCorrection(input);
+        expect(corr).toBeDefined();
+        expect(corr?.correctedText).toContain(expectedSub);
+        expect(corr?.category).toBe(cat);
+        expect(corr?.rule).toBeTypeOf('string');
+        expect(corr?.rule?.length).toBeGreaterThan(0);
+        expect(corr?.example).toBeTypeOf('string');
+        expect(corr?.example?.length).toBeGreaterThan(0);
+        expect(corr?.explanation).toBeTypeOf('string');
+        expect(corr?.explanation?.length).toBeGreaterThan(0);
+      });
+    });
+  });
 });

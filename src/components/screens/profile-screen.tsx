@@ -76,7 +76,7 @@ export function ProfileScreen() {
   }, [progress.activityByDate]);
 
   return (
-    <ScreenContainer title="Mi Perfil" isLoading={!isHydrated}>
+    <ScreenContainer title="Mi Perfil" isLoading={!isHydrated} scrollable={false}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         {/* Profile Card Header */}
         <View style={styles.profileHeaderCard}>

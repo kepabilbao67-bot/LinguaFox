@@ -126,7 +126,7 @@ export function QuizScreen({ lesson }: QuizScreenProps) {
   };
 
   return (
-    <ScreenContainer title={`Quiz · ${lesson.title}`}>
+    <ScreenContainer title={`Quiz · ${lesson.title}`} scrollable={false}>
       <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         {/* Progress header */}
         <View style={styles.headerRow}>

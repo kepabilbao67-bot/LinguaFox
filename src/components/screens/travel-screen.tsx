@@ -21,7 +21,7 @@ export function TravelScreen() {
   };
 
   return (
-    <ScreenContainer title="Viaje por el Mundo">
+    <ScreenContainer title="Viaje por el Mundo" scrollable={false}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         {/* Hero */}
         <View style={styles.heroCard}>

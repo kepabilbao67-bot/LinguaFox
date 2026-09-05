@@ -1,12 +1,12 @@
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
 
 import { ScreenContainer } from '@/components/screen-container';
 import { AppColors } from '@/constants/app-theme';
 import { useTheme, type ThemeColors } from '@/theme/theme-context';
 import { KIDS_TOPICS, type KidsTopic } from '@/data/kids-content';
-import { speakText } from '@/services/speech';
+import { speakText, stopSpeaking } from '@/services/speech';
 import { useProgress } from '@/hooks/use-progress';
 
 export function KidsScreen() {
@@ -18,6 +18,16 @@ export function KidsScreen() {
   const [activeItemIndex, setActiveItemIndex] = useState(0);
   const [starsEarned, setStarsEarned] = useState(0);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      stopSpeaking();
+      if (feedbackTimerRef.current) {
+        clearTimeout(feedbackTimerRef.current);
+      }
+    };
+  }, []);
 
   const activeItem = selectedTopic.items[activeItemIndex] ?? selectedTopic.items[0];
 
@@ -31,13 +41,16 @@ export function KidsScreen() {
     setStarsEarned((prev) => prev + 1);
     addExperience(5);
     setFeedback('¡Genial! ⭐ +5 XP');
-    setTimeout(() => setFeedback(null), 2000);
+    if (feedbackTimerRef.current) {
+      clearTimeout(feedbackTimerRef.current);
+    }
+    feedbackTimerRef.current = setTimeout(() => setFeedback(null), 2000);
 
     setActiveItemIndex((prev) => (prev + 1) % selectedTopic.items.length);
   };
 
   return (
-    <ScreenContainer title="LinguaFox Kids 🦊">
+    <ScreenContainer title="LinguaFox Kids 🦊" scrollable={false}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         {/* Top Kids Banner */}
         <View style={styles.kidsHeaderCard}>

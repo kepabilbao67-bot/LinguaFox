@@ -38,7 +38,7 @@ export function ScenariosScreen() {
   };
 
   return (
-    <ScreenContainer title="Escenarios y Roleplay">
+    <ScreenContainer title="Escenarios y Roleplay" scrollable={false}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         {/* Banner */}
         <View style={styles.banner}>
@@ -67,48 +67,61 @@ export function ScenariosScreen() {
         </ScrollView>
 
         {/* Scenarios Grid */}
-        <View style={styles.grid}>
-          {filtered.map((scenario) => {
-            const isCompleted = progress.completedScenarios?.includes(scenario.id);
-            return (
-              <Pressable
-                key={scenario.id}
-                style={[styles.card, isCompleted && styles.cardCompleted]}
-                onPress={() => startScenario(scenario)}
-              >
-                <View style={styles.cardHeader}>
-                  <Text style={styles.cardIcon}>{scenario.icon}</Text>
-                  <View style={styles.badgeRow}>
-                    <View style={styles.levelBadge}>
-                      <Text style={styles.levelText}>{scenario.level}</Text>
-                    </View>
-                    {isCompleted && (
-                      <View style={styles.completedBadge}>
-                        <Text style={styles.completedText}>✓ Completado</Text>
+        {filtered.length === 0 ? (
+          <View style={styles.emptyCard}>
+            <Text style={styles.emptyEmoji}>🎭</Text>
+            <Text style={styles.emptyTitle}>Sin escenarios en esta categoría</Text>
+            <Text style={styles.emptySubtitle}>
+              Prueba a seleccionar “Todos” o explorar otras categorías de conversación para practicar.
+            </Text>
+            <Pressable style={styles.emptyBtn} onPress={() => setFilter('all')}>
+              <Text style={styles.emptyBtnText}>Ver todos los escenarios</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <View style={styles.grid}>
+            {filtered.map((scenario) => {
+              const isCompleted = progress.completedScenarios?.includes(scenario.id);
+              return (
+                <Pressable
+                  key={scenario.id}
+                  style={[styles.card, isCompleted && styles.cardCompleted]}
+                  onPress={() => startScenario(scenario)}
+                >
+                  <View style={styles.cardHeader}>
+                    <Text style={styles.cardIcon}>{scenario.icon}</Text>
+                    <View style={styles.badgeRow}>
+                      <View style={styles.levelBadge}>
+                        <Text style={styles.levelText}>{scenario.level}</Text>
                       </View>
-                    )}
+                      {isCompleted && (
+                        <View style={styles.completedBadge}>
+                          <Text style={styles.completedText}>✓ Completado</Text>
+                        </View>
+                      )}
+                    </View>
                   </View>
-                </View>
 
-                <Text style={styles.cardTitle}>{scenario.title}</Text>
-                <Text style={styles.cardDescription}>{scenario.description}</Text>
+                  <Text style={styles.cardTitle}>{scenario.title}</Text>
+                  <Text style={styles.cardDescription}>{scenario.description}</Text>
 
-                {/* Goals */}
-                <View style={styles.goalsBox}>
-                  <Text style={styles.goalsTitle}>Objetivos:</Text>
-                  {scenario.goals.map((g, idx) => (
-                    <Text key={idx} style={styles.goalItem}>• {g}</Text>
-                  ))}
-                </View>
+                  {/* Goals */}
+                  <View style={styles.goalsBox}>
+                    <Text style={styles.goalsTitle}>Objetivos:</Text>
+                    {scenario.goals.map((g, idx) => (
+                      <Text key={idx} style={styles.goalItem}>• {g}</Text>
+                    ))}
+                  </View>
 
-                {/* Action CTA */}
-                <View style={styles.startBtn}>
-                  <Text style={styles.startBtnText}>🎙️ Iniciar conversación</Text>
-                </View>
-              </Pressable>
-            );
-          })}
-        </View>
+                  {/* Action CTA */}
+                  <View style={styles.startBtn}>
+                    <Text style={styles.startBtnText}>🎙️ Iniciar conversación</Text>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
+        )}
       </ScrollView>
     </ScreenContainer>
   );
@@ -187,4 +200,25 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   startBtnText: { color: AppColors.text, fontWeight: '900', fontSize: 15 },
+  emptyCard: {
+    backgroundColor: AppColors.surface,
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+    gap: 10,
+    borderWidth: 1,
+    borderColor: AppColors.surfaceBorder,
+    marginTop: 10,
+  },
+  emptyEmoji: { fontSize: 40 },
+  emptyTitle: { color: AppColors.text, fontSize: 17, fontWeight: '800', textAlign: 'center' },
+  emptySubtitle: { color: AppColors.textMuted, fontSize: 13, textAlign: 'center', lineHeight: 18 },
+  emptyBtn: {
+    backgroundColor: AppColors.primary,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 99,
+    marginTop: 8,
+  },
+  emptyBtnText: { color: AppColors.text, fontWeight: '800', fontSize: 13 },
 });

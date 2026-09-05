@@ -441,4 +441,151 @@ describe('Real Daily Activity, Challenges, Streak, Errors and CEFR Telemetry', (
       expect(phoneticsChallenge?.current).toBe(1);
     });
   });
+
+  describe('7. PROTECCIÓN DE XP Y RECOMPENSAS DE PRONUNCIACIÓN (SPEAKING V1)', () => {
+    const todayTs = new Date('2026-09-05T12:00:00Z').getTime();
+    const todayKey = getLocalDateKey(todayTs);
+
+    const recordPractice = (state: ProgressState, challengeId: string) => {
+      const completed = state.completedPronunciationChallenges ?? {};
+      if (completed[challengeId]) {
+        return { state, awarded: false, xpGained: 0 };
+      }
+      const todayActivity = state.activityByDate?.[todayKey] ?? {
+        lessonsCompleted: 0,
+        chatMessages: 0,
+        spokenPhrases: 0,
+        reviewsCompleted: 0,
+      };
+
+      const nextState: ProgressState = {
+        ...state,
+        experiencia: state.experiencia + 15,
+        spokenPhrasesCount: (state.spokenPhrasesCount ?? 0) + 1,
+        completedPronunciationChallenges: {
+          ...completed,
+          [challengeId]: new Date(todayTs).toISOString(),
+        },
+        activityByDate: {
+          ...state.activityByDate,
+          [todayKey]: {
+            ...todayActivity,
+            spokenPhrases: (todayActivity.spokenPhrases ?? 0) + 1,
+          },
+        },
+      };
+      return { state: nextState, awarded: true, xpGained: 15 };
+    };
+
+    it('primera práctica del reto suma XP', () => {
+      let state = { ...DEFAULT_PROGRESS, experiencia: 50 };
+      const challengeId = 'en-w-coffee';
+
+      const result = recordPractice(state, challengeId);
+      expect(result.awarded).toBe(true);
+      expect(result.xpGained).toBe(15);
+      expect(result.state.experiencia).toBe(65);
+      expect(result.state.completedPronunciationChallenges?.[challengeId]).toBeDefined();
+      expect(result.state.spokenPhrasesCount).toBe(1);
+    });
+
+    it('segunda pulsación NO suma XP', () => {
+      let state = { ...DEFAULT_PROGRESS, experiencia: 50 };
+      const challengeId = 'en-w-coffee';
+
+      // Primera pulsación
+      const first = recordPractice(state, challengeId);
+      expect(first.awarded).toBe(true);
+      expect(first.state.experiencia).toBe(65);
+
+      // Segunda pulsación idéntica
+      const second = recordPractice(first.state, challengeId);
+      expect(second.awarded).toBe(false);
+      expect(second.xpGained).toBe(0);
+      expect(second.state.experiencia).toBe(65);
+      expect(second.state.spokenPhrasesCount).toBe(1); // No incrementa
+    });
+
+    it('cerrar/reabrir mantiene reto practicado', () => {
+      const challengeId = 'en-th-third';
+      const initial = { ...DEFAULT_PROGRESS, experiencia: 100 };
+      const pass = recordPractice(initial, challengeId);
+
+      // Simular guardado y recarga por AsyncStorage con sanitización
+      const serialized = JSON.stringify(pass.state);
+      const rehydrated = sanitizeProgress(JSON.parse(serialized));
+
+      expect(rehydrated.completedPronunciationChallenges?.[challengeId]).toBeDefined();
+      // Un intento de volver a practicar tras reabrir la app es rechazado
+      const repeatAfterReload = recordPractice(rehydrated, challengeId);
+      expect(repeatAfterReload.awarded).toBe(false);
+      expect(repeatAfterReload.xpGained).toBe(0);
+      expect(repeatAfterReload.state.experiencia).toBe(pass.state.experiencia);
+    });
+
+    it('listening no marca reto speaking como practicado', () => {
+      const challengeId = 'en-stress-hotel';
+      let state: ProgressState = {
+        ...DEFAULT_PROGRESS,
+        listeningActivitiesCount: 0,
+        activityByDate: {
+          [todayKey]: { lessonsCompleted: 0, chatMessages: 0, spokenPhrases: 0, reviewsCompleted: 0, listeningActivities: 0 },
+        },
+      };
+
+      // Simular escuchar audio repetidas veces
+      const todayActivity = state.activityByDate?.[todayKey] ?? {
+        lessonsCompleted: 0,
+        chatMessages: 0,
+        spokenPhrases: 0,
+        reviewsCompleted: 0,
+      };
+
+      state = {
+        ...state,
+        listeningActivitiesCount: (state.listeningActivitiesCount ?? 0) + 3,
+        activityByDate: {
+          ...state.activityByDate,
+          [todayKey]: {
+            ...todayActivity,
+            listeningActivities: (todayActivity.listeningActivities ?? 0) + 3,
+          },
+        },
+      };
+
+      // El reto sigue NO practicado y no otorga XP de speaking por solo escuchar
+      expect(state.completedPronunciationChallenges?.[challengeId]).toBeUndefined();
+      expect(state.spokenPhrasesCount).toBe(0);
+      expect(state.experiencia).toBe(0);
+    });
+
+    it('cambiar de reto permite nueva recompensa', () => {
+      let state = { ...DEFAULT_PROGRESS, experiencia: 50 };
+
+      // Completar reto 1
+      const res1 = recordPractice(state, 'en-w-coffee');
+      expect(res1.awarded).toBe(true);
+      expect(res1.state.experiencia).toBe(65);
+
+      // Cambiar a reto 2 (no completado aún)
+      const res2 = recordPractice(res1.state, 'en-th-third');
+      expect(res2.awarded).toBe(true);
+      expect(res2.state.experiencia).toBe(80); // 65 + 15 = 80
+      expect(res2.state.spokenPhrasesCount).toBe(2);
+    });
+
+    it('dos retos distintos pueden recompensar independientemente', () => {
+      let state = { ...DEFAULT_PROGRESS, experiencia: 0 };
+
+      const resA = recordPractice(state, 'fr-r-croissant');
+      const resB = recordPractice(resA.state, 'de-ch-wasser');
+
+      expect(resA.awarded).toBe(true);
+      expect(resB.awarded).toBe(true);
+      expect(resB.state.experiencia).toBe(30); // 15 + 15
+      expect(resB.state.spokenPhrasesCount).toBe(2);
+      expect(resB.state.completedPronunciationChallenges?.['fr-r-croissant']).toBeDefined();
+      expect(resB.state.completedPronunciationChallenges?.['de-ch-wasser']).toBeDefined();
+    });
+  });
 });

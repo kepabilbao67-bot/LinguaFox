@@ -79,7 +79,7 @@ export function HomeScreen() {
   const claimedCount = dailyChallenges.filter((c) => c.claimed).length;
 
   return (
-    <ScreenContainer title="LinguaFox" isLoading={!isHydrated}>
+    <ScreenContainer title="LinguaFox" isLoading={!isHydrated} scrollable={false}>
       <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         {/* Top Header Bar: Language, Stats, Profile */}
         <View style={styles.topStatusRow}>

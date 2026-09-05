@@ -55,7 +55,7 @@ export function MyErrorsScreen() {
   };
 
   return (
-    <ScreenContainer title="Mis Errores">
+    <ScreenContainer title="Mis Errores" scrollable={false}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         {/* Header Hero */}
         <View style={styles.heroCard}>

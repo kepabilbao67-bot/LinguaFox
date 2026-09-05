@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
 import { ScreenContainer } from '@/components/screen-container';
 import { AppColors } from '@/constants/app-theme';
@@ -15,6 +15,12 @@ export function SRSReviewScreen() {
   const [isFlipped, setIsFlipped] = useState(false);
   const [reviewedCount, setReviewedCount] = useState(0);
   const [sessionStartTime] = useState(() => Date.now());
+
+  useEffect(() => {
+    return () => {
+      stopSpeaking();
+    };
+  }, []);
 
   // 1. Due cards in SRS storage
   const activeSrsCards = useMemo(
@@ -115,7 +121,7 @@ export function SRSReviewScreen() {
   const masteryLabel = mastery === 'mastered' ? '💎 Dominada' : mastery === 'learning' ? '⚡ En Aprendizaje' : '🌱 Nueva';
 
   return (
-    <ScreenContainer title="Repaso Inteligente">
+    <ScreenContainer title="Repaso Inteligente" scrollable={false}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         {/* Header Progress */}
         <View style={styles.headerRow}>

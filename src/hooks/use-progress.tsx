@@ -31,6 +31,7 @@ interface ProgressContextValue {
   addExperience: (xp: number) => void;
   recordSpeakingPractice: () => void;
   recordListeningPractice: () => void;
+  recordPronunciationPractice: (challengeId: string) => boolean;
   incrementSpokenPhrases: () => void;
   unlockCity: (cityId: string) => void;
   completeScenario: (scenarioId: string) => void;
@@ -309,6 +310,34 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
     }));
   }, []);
 
+  const recordPronunciationPractice = useCallback((challengeId: string): boolean => {
+    if (!challengeId) return false;
+    let awarded = false;
+    const nowStr = new Date().toISOString();
+    const todayKey = getLocalDateKey();
+
+    setProgress((current) => {
+      const completed = current.completedPronunciationChallenges ?? {};
+      if (completed[challengeId]) {
+        return current; // Idempotent: already completed, 0 XP
+      }
+      awarded = true;
+      return {
+        ...current,
+        ...calculateNewStreak(current, Date.now()),
+        spokenPhrasesCount: (current.spokenPhrasesCount ?? 0) + 1,
+        experiencia: current.experiencia + 15,
+        completedPronunciationChallenges: {
+          ...completed,
+          [challengeId]: nowStr,
+        },
+        activityByDate: recordDailyActivity(current.activityByDate, 'spokenPhrases', todayKey),
+      };
+    });
+
+    return awarded;
+  }, []);
+
   const incrementSpokenPhrases = recordSpeakingPractice;
 
   const unlockCity = useCallback((cityId: string) => {
@@ -479,6 +508,7 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
       addExperience,
       recordSpeakingPractice,
       recordListeningPractice,
+      recordPronunciationPractice,
       incrementSpokenPhrases,
       unlockCity,
       completeScenario,
@@ -502,6 +532,7 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
       addExperience,
       recordSpeakingPractice,
       recordListeningPractice,
+      recordPronunciationPractice,
       incrementSpokenPhrases,
       unlockCity,
       completeScenario,

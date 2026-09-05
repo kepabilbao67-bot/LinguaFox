@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
 import { ScreenContainer } from '@/components/screen-container';
 import { AppColors } from '@/constants/app-theme';
@@ -18,7 +18,7 @@ interface PronunciationChallenge {
 const PRONUNCIATION_BANK: Record<string, readonly PronunciationChallenge[]> = {
   en: [
     {
-      id: 'en-1',
+      id: 'en-w-coffee',
       phrase: 'Would you like a cup of coffee?',
       ipa: '/wʊd juː laɪk ə kʌp əv ˈkɒfi/',
       translation: '¿Te gustaría una taza de café?',
@@ -27,7 +27,7 @@ const PRONUNCIATION_BANK: Record<string, readonly PronunciationChallenge[]> = {
       difficulty: 'A1',
     },
     {
-      id: 'en-2',
+      id: 'en-th-third',
       phrase: 'Thinking through the third option',
       ipa: '/ˈθɪŋkɪŋ θruː ðə θɜːd ˈɒpʃn/',
       translation: 'Pensando en la tercera opción',
@@ -36,7 +36,7 @@ const PRONUNCIATION_BANK: Record<string, readonly PronunciationChallenge[]> = {
       difficulty: 'A2',
     },
     {
-      id: 'en-3',
+      id: 'en-stress-hotel',
       phrase: 'Comfortable and affordable hotel',
       ipa: '/ˈkʌmftəbl ənd əˈfɔːdəbl həʊˈtɛl/',
       translation: 'Hotel cómodo y asequible',
@@ -47,7 +47,7 @@ const PRONUNCIATION_BANK: Record<string, readonly PronunciationChallenge[]> = {
   ],
   es: [
     {
-      id: 'es-1',
+      id: 'es-rr-perro',
       phrase: 'El perro corre rápido por el parque',
       ipa: '/el ˈpero ˈkore ˈrapido poɾ el ˈpaɾke/',
       translation: 'The dog runs fast through the park',
@@ -56,7 +56,7 @@ const PRONUNCIATION_BANK: Record<string, readonly PronunciationChallenge[]> = {
       difficulty: 'A1',
     },
     {
-      id: 'es-2',
+      id: 'es-clusters-fruta',
       phrase: 'Ayer compramos fruta fresca en la plaza',
       ipa: '/aˈʝeɾ komˈpɾamos ˈfɾuta ˈfɾeska en la ˈplasa/',
       translation: 'Yesterday we bought fresh fruit in the square',
@@ -67,7 +67,7 @@ const PRONUNCIATION_BANK: Record<string, readonly PronunciationChallenge[]> = {
   ],
   fr: [
     {
-      id: 'fr-1',
+      id: 'fr-r-croissant',
       phrase: 'Bonjour, un café et un croissant, s’il vous plaît',
       ipa: '/bɔ̃.ʒuʁ œ̃ ka.fe e œ̃ kʁwa.sɑ̃ sil vu plɛ/',
       translation: 'Buenos días, un café y un cruasán, por favor',
@@ -76,7 +76,7 @@ const PRONUNCIATION_BANK: Record<string, readonly PronunciationChallenge[]> = {
       difficulty: 'A1',
     },
     {
-      id: 'fr-2',
+      id: 'fr-vowels-tour',
       phrase: 'Où se trouve la tour Eiffel ?',
       ipa: '/u sə tʁuv la tuʁ ɛ.fɛl/',
       translation: '¿Dónde se encuentra la torre Eiffel?',
@@ -87,7 +87,7 @@ const PRONUNCIATION_BANK: Record<string, readonly PronunciationChallenge[]> = {
   ],
   it: [
     {
-      id: 'it-1',
+      id: 'it-double-cappuccino',
       phrase: 'Buongiorno, vorrei un cappuccino e un cornetto',
       ipa: '/bwɔnˈdʒorno vorˈrɛi un kapputˈtʃino/',
       translation: 'Buenos días, quisiera un capuchino y un cruasán',
@@ -96,7 +96,7 @@ const PRONUNCIATION_BANK: Record<string, readonly PronunciationChallenge[]> = {
       difficulty: 'A1',
     },
     {
-      id: 'it-2',
+      id: 'it-zz-piazza',
       phrase: 'La piazza principale è bellissima di sera',
       ipa: '/la ˈpjattsa printʃiˈpale ɛ belˈlissima di ˈseɾa/',
       translation: 'La plaza principal es hermosísima por la tarde',
@@ -107,7 +107,7 @@ const PRONUNCIATION_BANK: Record<string, readonly PronunciationChallenge[]> = {
   ],
   de: [
     {
-      id: 'de-1',
+      id: 'de-ch-wasser',
       phrase: 'Ich möchte bitte ein Glas Wasser',
       ipa: '/ɪç ˈmœçtə ˈbɪtə aɪn ɡlaːs ˈvasɐ/',
       translation: 'Quisiera un vaso de agua por favor',
@@ -116,7 +116,7 @@ const PRONUNCIATION_BANK: Record<string, readonly PronunciationChallenge[]> = {
       difficulty: 'A1',
     },
     {
-      id: 'de-2',
+      id: 'de-sch-entschuldigung',
       phrase: 'Entschuldigung, wie viel Uhr ist es?',
       ipa: '/ɛntˈʃʊldɪɡʊŋ viː fiːl uːɐ̯ ɪst ɛs/',
       translation: 'Disculpe, ¿qué hora es?',
@@ -127,7 +127,7 @@ const PRONUNCIATION_BANK: Record<string, readonly PronunciationChallenge[]> = {
   ],
   pt: [
     {
-      id: 'pt-1',
+      id: 'pt-nasal-pao',
       phrase: 'Obrigado pelo café e pelo pão quente',
       ipa: '/oβɾiˈɣaðu ˈpelu kɐˈfɛ i ˈpelu ˈpɐ̃w̃/',
       translation: 'Gracias por el café y el pan caliente',
@@ -138,7 +138,7 @@ const PRONUNCIATION_BANK: Record<string, readonly PronunciationChallenge[]> = {
   ],
   eu: [
     {
-      id: 'eu-1',
+      id: 'eu-affricates-kafe',
       phrase: 'Egun on, kafe bat esnearekin mesedez',
       ipa: '/eɣun on, kafe bat esne.a.rekin mesedes/',
       translation: 'Buenos días, un café con leche por favor',
@@ -149,7 +149,7 @@ const PRONUNCIATION_BANK: Record<string, readonly PronunciationChallenge[]> = {
   ],
   ca: [
     {
-      id: 'ca-1',
+      id: 'ca-neutral-cafe',
       phrase: 'Bon dia, voldria un cafè amb llet, si us plau',
       ipa: '/bɔn ˈdi.ə, vulˈdɾi.ə uŋ kəˈfɛ əm ˈʎet, siws ˈplaw/',
       translation: 'Buenos días, querría un café con leche, por favor',
@@ -161,13 +161,21 @@ const PRONUNCIATION_BANK: Record<string, readonly PronunciationChallenge[]> = {
 };
 
 export function PronunciationScreen() {
-  const { progress, addExperience, recordSpeakingPractice, recordListeningPractice } = useProgress();
+  const { progress, recordPronunciationPractice, recordListeningPractice } = useProgress();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [practiced, setPracticed] = useState(false);
   const [selectedSpeed, setSelectedSpeed] = useState<0.5 | 0.85 | 1.2>(0.85);
 
   const challenges = PRONUNCIATION_BANK[progress.idiomaObjetivo] ?? PRONUNCIATION_BANK.en;
   const current = challenges[currentIndex % challenges.length];
+
+  const completedMap = progress.completedPronunciationChallenges ?? {};
+  const isAlreadyPracticed = Boolean(completedMap[current.id]);
+
+  useEffect(() => {
+    return () => {
+      stopSpeaking();
+    };
+  }, []);
 
   const handleListen = (speed: 0.5 | 0.85 | 1.2) => {
     setSelectedSpeed(speed);
@@ -176,28 +184,26 @@ export function PronunciationScreen() {
     recordListeningPractice();
   };
 
-  const handleRecordSelfPractice = () => {
-    setPracticed(true);
-    recordSpeakingPractice();
-    addExperience(15);
+  const handleConfirmSelfPractice = () => {
+    if (isAlreadyPracticed) return; // Guard robusto contra doble recompensa
+    recordPronunciationPractice(current.id);
   };
 
   const handleNext = () => {
     stopSpeaking();
-    setPracticed(false);
     setCurrentIndex((prev) => (prev + 1) % challenges.length);
   };
 
   return (
-    <ScreenContainer title="Estudio de Pronunciación">
+    <ScreenContainer title="Estudio de Pronunciación" scrollable={false}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         {/* Banner Hero */}
         <View style={styles.banner}>
           <Text style={styles.bannerIcon}>🎙️</Text>
           <View style={styles.bannerContent}>
-            <Text style={styles.bannerTitle}>Laboratorio Fonético</Text>
+            <Text style={styles.bannerTitle}>Laboratorio de Articulación y Fonética</Text>
             <Text style={styles.bannerSubtitle}>
-              Entrena la colocación de la lengua, respiración y ritmo con transcripción fonética internacional (IPA).
+              Entrena la colocación de la lengua, respiración y ritmo con transcripción fonética (IPA). Escucha el modelo y confirma tu práctica repitiendo en voz alta.
             </Text>
           </View>
         </View>
@@ -265,14 +271,20 @@ export function PronunciationScreen() {
           <View style={styles.practiceSection}>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={practiced ? 'Frase practicada, quince de experiencia sumados' : 'Confirmar práctica oral en voz alta'}
-              style={[styles.practiceButton, practiced && styles.practiceButtonDone]}
-              onPress={handleRecordSelfPractice}
+              accessibilityLabel={isAlreadyPracticed ? 'Reto ya practicado, experiencia otorgada' : 'Confirmar que has repetido la frase en voz alta'}
+              style={[styles.practiceButton, isAlreadyPracticed && styles.practiceButtonDone]}
+              onPress={handleConfirmSelfPractice}
+              disabled={isAlreadyPracticed}
             >
               <Text style={styles.practiceButtonText}>
-                {practiced ? '✅ ¡Frase practicada! (+15 XP)' : '🗣️ He practicado en voz alta'}
+                {isAlreadyPracticed ? '✅ Reto practicado (+15 XP otorgados)' : '🗣️ Confirmar que he repetido en voz alta'}
               </Text>
             </Pressable>
+            <Text style={styles.honestTipText}>
+              {isAlreadyPracticed
+                ? '¡Completado! Puedes seguir escuchando el audio tantas veces como desees sin límite.'
+                : 'Autoevaluación: imita la pronunciación nativa en voz alta antes de confirmar para registrar tu práctica.'}
+            </Text>
           </View>
         </View>
 
@@ -459,6 +471,14 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '900',
+  },
+  honestTipText: {
+    color: AppColors.textMuted,
+    fontSize: 12,
+    lineHeight: 16,
+    textAlign: 'center',
+    marginTop: 8,
+    fontStyle: 'italic',
   },
   navRow: {
     flexDirection: 'row',

@@ -78,7 +78,7 @@ export function ProgressScreen() {
   }, [allCourseLessons, progress]);
 
   return (
-    <ScreenContainer title="Progreso y Marco CEFR" isLoading={!isHydrated}>
+    <ScreenContainer title="Progreso y Marco CEFR" isLoading={!isHydrated} scrollable={false}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         {/* Global Progress Header Card */}
         <View style={styles.profileCard}>

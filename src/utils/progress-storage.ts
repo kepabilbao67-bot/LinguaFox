@@ -52,6 +52,7 @@ export const DEFAULT_PROGRESS: ProgressState = {
   dailyChallengeClaims: {},
   activityByDate: {},
   competencyStats: {},
+  completedPronunciationChallenges: {},
 };
 
 export function getGlobalStars(
@@ -273,6 +274,7 @@ export function sanitizeProgress(raw: unknown): ProgressState {
     dailyChallengeClaims: sanitizeStringRecord(value.dailyChallengeClaims),
     activityByDate: sanitizeActivityByDate(value.activityByDate),
     competencyStats: sanitizeCompetencyStats(value.competencyStats),
+    completedPronunciationChallenges: sanitizeStringRecord(value.completedPronunciationChallenges),
   };
 }
 
