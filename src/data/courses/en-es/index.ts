@@ -11,6 +11,8 @@ import { UNIT_7 } from './unit-7';
 import { UNIT_8 } from './unit-8';
 import { UNIT_9 } from './unit-9';
 import { UNIT_10 } from './unit-10';
+import { UNIT_11 } from './unit-11';
+import { UNIT_12 } from './unit-12';
 
 export const UNITS_EN_ES: readonly Unit[] = [
   UNIT_1,
@@ -23,6 +25,8 @@ export const UNITS_EN_ES: readonly Unit[] = [
   UNIT_8,
   UNIT_9,
   UNIT_10,
+  UNIT_11,
+  UNIT_12,
 ];
 
 export function getLessonById(id: string): { lesson: Lesson; unit: Unit } | null {

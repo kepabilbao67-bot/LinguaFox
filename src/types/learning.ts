@@ -1,4 +1,4 @@
-export type LanguageCode = 'en' | 'es' | 'fr' | 'it' | 'de' | 'pt';
+export type LanguageCode = 'en' | 'es' | 'fr' | 'it' | 'de' | 'pt' | 'eu' | 'ca';
 
 export type CEFRLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
 
@@ -139,6 +139,48 @@ export interface SRSCard {
   lastReviewed: number;
 }
 
+export type ConversationMode = 'free' | 'scenario' | 'tutor' | 'exam' | 'travel';
+
+export interface Scenario {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  category: 'daily' | 'travel' | 'work' | 'social' | 'emergency';
+  level: CEFRLevel;
+  city?: string;
+  characterId: string;
+  initialGreeting: string;
+  targetLanguage: LanguageCode;
+  goals: readonly string[];
+  vocabulary: readonly string[];
+}
+
+export interface CityAdventure {
+  id: string;
+  name: string;
+  country: string;
+  flag: string;
+  emoji: string;
+  level: CEFRLevel;
+  description: string;
+  landmarks: readonly string[];
+  vocabulary: readonly string[];
+  scenarios: readonly string[];
+  xpReward: number;
+}
+
+export interface TrackedError {
+  id: string;
+  userText: string;
+  correctedText: string;
+  explanation: string;
+  category: 'grammar' | 'vocabulary' | 'preposition' | 'verb-tense' | 'pronunciation';
+  language: LanguageCode;
+  timestamp: number;
+  reviewed: boolean;
+}
+
 export interface ProgressState {
   leccionesCompletadas: string[];
   estrellas: number;
@@ -165,6 +207,11 @@ export interface ProgressState {
   coins: number;
   crowns: Record<string, LessonCrown>;
   srs: Record<string, SRSCard>;
+  trackedErrors?: readonly TrackedError[];
+  unlockedCities?: readonly string[];
+  completedScenarios?: readonly string[];
+  spokenPhrasesCount?: number;
+  logrosXpOtorgados?: readonly string[];
 }
 
 export interface QuizReward {
@@ -179,6 +226,9 @@ export type ChatRole = 'tutor' | 'user';
 export interface ChatCorrection {
   correctedText: string;
   explanation: string;
+  category?: 'grammar' | 'vocabulary' | 'preposition' | 'verb-tense' | 'pronunciation';
+  rule?: string;
+  example?: string;
 }
 
 export interface Message {
@@ -187,12 +237,17 @@ export interface Message {
   text: string;
   createdAt: string;
   correction?: ChatCorrection;
+  translation?: string;
+  audioText?: string;
+  pronunciationFeedback?: string;
 }
 
 export interface TutorReply {
   text: string;
   correction?: ChatCorrection;
   suggestions: readonly string[];
+  translation?: string;
+  hints?: readonly string[];
 }
 
 export type CharacterDifficulty = 'facil' | 'medio';
@@ -206,6 +261,9 @@ export interface Character {
   vocabularyFocus: string;
   avatar: string;
   replyStyle: string;
+  roleTitle?: string;
+  city?: string;
+  language?: LanguageCode;
 }
 
 export interface CharacterMessage extends Message {

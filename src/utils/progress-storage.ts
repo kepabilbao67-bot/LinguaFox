@@ -125,14 +125,20 @@ export function sanitizeProgress(raw: unknown): ProgressState {
   const bestStars = sanitizeNumberRecord(value.mejoresEstrellasPorLeccion);
   const settings = (typeof value.ajustes === 'object' && value.ajustes !== null ? value.ajustes : {}) as Partial<AppSettings>;
 
-  let nativo = typeof value.idiomaNativo === 'string' ? (value.idiomaNativo as LanguageCode) : undefined;
-  let objetivo = typeof value.idiomaObjetivo === 'string' ? (value.idiomaObjetivo as LanguageCode) : undefined;
+  const VALID_LANGUAGES = new Set<LanguageCode>(['en', 'es', 'fr', 'it', 'de', 'pt', 'eu', 'ca']);
+
+  let nativo = typeof value.idiomaNativo === 'string' && VALID_LANGUAGES.has(value.idiomaNativo as LanguageCode)
+    ? (value.idiomaNativo as LanguageCode)
+    : undefined;
+  let objetivo = typeof value.idiomaObjetivo === 'string' && VALID_LANGUAGES.has(value.idiomaObjetivo as LanguageCode)
+    ? (value.idiomaObjetivo as LanguageCode)
+    : undefined;
 
   if (!nativo || !objetivo) {
     if (typeof value.idioma === 'string') {
       const oldIdioma = value.idioma as LanguageCode;
       nativo = 'es';
-      objetivo = (oldIdioma === 'en' || oldIdioma === 'fr') ? oldIdioma : 'en';
+      objetivo = VALID_LANGUAGES.has(oldIdioma) ? oldIdioma : 'en';
     } else {
       nativo = nativo ?? DEFAULT_PROGRESS.idiomaNativo;
       objetivo = objetivo ?? DEFAULT_PROGRESS.idiomaObjetivo;

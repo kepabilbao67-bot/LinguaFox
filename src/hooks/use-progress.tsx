@@ -2,10 +2,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
 
-import type { LanguageCode, ProgressState } from '@/types/learning';
+import type { LanguageCode, ProgressState, TrackedError } from '@/types/learning';
 import { calculateQuizStars } from '@/utils/rewards';
-import { evaluateAchievements } from '@/data/achievements';
+import { ACHIEVEMENTS, evaluateAchievements } from '@/data/achievements';
 import { calculateNewStreak } from '@/utils/streak-logic';
+import { reviewCard } from '@/utils/srs';
 import { safeLoadProgress, sanitizeProgress, DEFAULT_PROGRESS, STORAGE_KEY, getGlobalStars } from '@/utils/progress-storage';
 
 // Keep the splash screen visible while we fetch resources
@@ -23,6 +24,13 @@ interface ProgressContextValue {
   resetProgress: () => void;
   latestAchievementId: string | null;
   completeOnboarding: () => void;
+  addTrackedError: (error: TrackedError) => void;
+  dismissTrackedError: (errorId: string) => void;
+  recordSRSReview: (cardKey: string, quality: number, initialData?: { en: string; es: string; ipa?: string }) => void;
+  addExperience: (xp: number) => void;
+  incrementSpokenPhrases: () => void;
+  unlockCity: (cityId: string) => void;
+  completeScenario: (scenarioId: string) => void;
 }
 
 const ProgressContext = createContext<ProgressContextValue | null>(null);
@@ -80,17 +88,64 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
 
   useEffect(() => {
     if (!isHydrated) return;
-    const eligible = evaluateAchievements({ lecciones: progress.leccionesCompletadas.length, mensajes: progress.mensajesPersonajes, personajes: progress.personajesConCharla.length, racha: progress.rachaActual });
-    const missing = eligible.filter((id) => !progress.logrosDesbloqueados[id]);
-    if (!missing.length) return;
+    const eligible = evaluateAchievements({
+      lecciones: progress.leccionesCompletadas.length,
+      mensajes: progress.mensajesPersonajes,
+      personajes: progress.personajesConCharla.length,
+      racha: progress.rachaActual,
+      spokenPhrases: progress.spokenPhrasesCount ?? 0,
+      unlockedCities: progress.unlockedCities?.length ?? 0,
+      scenariosCompleted: progress.completedScenarios?.length ?? 0,
+      reviewsCompleted: Object.keys(progress.srs ?? {}).length,
+    });
+
+    const alreadyGranted = new Set(progress.logrosXpOtorgados ?? Object.keys(progress.logrosDesbloqueados));
+    const newlyUnlocked = eligible.filter((id) => !progress.logrosDesbloqueados[id]);
+    const xpEligible = eligible.filter((id) => !alreadyGranted.has(id));
+
+    if (!newlyUnlocked.length && !xpEligible.length) return;
+
     const now = new Date().toISOString();
-    // Se difiere tras el ciclo de efectos para cumplir React 19 sin perder idempotencia.
+
     const timer = setTimeout(() => {
-      setProgress((current) => ({ ...current, logrosDesbloqueados: { ...current.logrosDesbloqueados, ...Object.fromEntries(missing.map((id) => [id, now])) }, logros: [...new Set([...current.logros, ...missing])]}));
-      setLatestAchievementId(missing[0] ?? null);
+      setProgress((current) => {
+        const currentGranted = new Set(current.logrosXpOtorgados ?? Object.keys(current.logrosDesbloqueados));
+        const finalXpToAward = xpEligible.filter((id) => !currentGranted.has(id)).reduce((sum, id) => {
+          const ach = ACHIEVEMENTS.find((a) => a.id === id);
+          return sum + (ach?.xpReward ?? 0);
+        }, 0);
+
+        return {
+          ...current,
+          experiencia: current.experiencia + finalXpToAward,
+          logrosDesbloqueados: {
+            ...current.logrosDesbloqueados,
+            ...Object.fromEntries(newlyUnlocked.map((id) => [id, now])),
+          },
+          logros: [...new Set([...current.logros, ...newlyUnlocked])],
+          logrosXpOtorgados: [...new Set([...(current.logrosXpOtorgados ?? []), ...xpEligible])],
+        };
+      });
+
+      if (newlyUnlocked.length > 0) {
+        setLatestAchievementId(newlyUnlocked[0] ?? null);
+      }
     }, 0);
+
     return () => clearTimeout(timer);
-  }, [isHydrated, progress.leccionesCompletadas.length, progress.logrosDesbloqueados, progress.mensajesPersonajes, progress.personajesConCharla.length, progress.rachaActual]);
+  }, [
+    isHydrated,
+    progress.completedScenarios?.length,
+    progress.leccionesCompletadas.length,
+    progress.logrosDesbloqueados,
+    progress.logrosXpOtorgados,
+    progress.mensajesPersonajes,
+    progress.personajesConCharla.length,
+    progress.rachaActual,
+    progress.spokenPhrasesCount,
+    progress.srs,
+    progress.unlockedCities?.length,
+  ]);
 
   const setLessonProgress = useCallback((lessonId: string, cardIndex: number) => {
     if (!lessonId || !Number.isFinite(cardIndex)) return;
@@ -176,6 +231,95 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
     [],
   );
 
+  const addTrackedError = useCallback((error: TrackedError) => {
+    setProgress((current) => {
+      const existing = current.trackedErrors ?? [];
+      const alreadyHas = existing.some((e) => e.id === error.id || e.userText.toLowerCase() === error.userText.toLowerCase());
+      if (alreadyHas) return current;
+      return {
+        ...current,
+        trackedErrors: [error, ...existing].slice(0, 50),
+      };
+    });
+  }, []);
+
+  const addExperience = useCallback((xp: number) => {
+    if (xp <= 0) return;
+    setProgress((current) => ({
+      ...current,
+      ...calculateNewStreak(current, Date.now()),
+      experiencia: current.experiencia + xp,
+    }));
+  }, []);
+
+  const incrementSpokenPhrases = useCallback(() => {
+    setProgress((current) => ({
+      ...current,
+      spokenPhrasesCount: (current.spokenPhrasesCount ?? 0) + 1,
+      experiencia: current.experiencia + 3,
+    }));
+  }, []);
+
+  const unlockCity = useCallback((cityId: string) => {
+    setProgress((current) => {
+      const unlocked = current.unlockedCities ?? [];
+      if (unlocked.includes(cityId)) return current;
+      return {
+        ...current,
+        unlockedCities: [...unlocked, cityId],
+      };
+    });
+  }, []);
+
+  const dismissTrackedError = useCallback((errorId: string) => {
+    setProgress((current) => ({
+      ...current,
+      trackedErrors: (current.trackedErrors ?? []).filter((e) => e.id !== errorId),
+    }));
+  }, []);
+
+  const recordSRSReview = useCallback(
+    (cardKey: string, quality: number, initialData?: { en: string; es: string; ipa?: string }) => {
+      setProgress((current) => {
+        const existingCard = current.srs[cardKey] ?? {
+          en: initialData?.en ?? cardKey,
+          es: initialData?.es ?? cardKey,
+          ipa: initialData?.ipa,
+          repetitions: 0,
+          interval: 0,
+          easeFactor: 2.5,
+          dueDate: Date.now(),
+          lastReviewed: 0,
+        };
+
+        const updatedCard = reviewCard(existingCard, quality, Date.now());
+
+        return {
+          ...current,
+          ...calculateNewStreak(current, Date.now()),
+          experiencia: current.experiencia + 10,
+          srs: {
+            ...current.srs,
+            [cardKey]: updatedCard,
+          },
+        };
+      });
+    },
+    [],
+  );
+
+  const completeScenario = useCallback((scenarioId: string) => {
+    setProgress((current) => {
+      const completed = current.completedScenarios ?? [];
+      if (completed.includes(scenarioId)) return current;
+      return {
+        ...current,
+        completedScenarios: [...completed, scenarioId],
+        experiencia: current.experiencia + 50,
+      };
+    });
+  }, []);
+
   const setLanguages = useCallback((nativo: LanguageCode, objetivo: LanguageCode) => {
     setProgress((current) => ({ ...current, idiomaNativo: nativo, idiomaObjetivo: objetivo }));
   }, []);
@@ -191,13 +335,22 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
 
   const value = useMemo<ProgressContextValue>(
     () => ({
-      progress, latestAchievementId, completeOnboarding,
+      progress,
+      latestAchievementId,
+      completeOnboarding,
       isHydrated,
       setLessonProgress,
       recordQuizResult,
       registerCharacterInteraction,
       setLanguages,
       resetProgress,
+      addTrackedError,
+      dismissTrackedError,
+      recordSRSReview,
+      addExperience,
+      incrementSpokenPhrases,
+      unlockCity,
+      completeScenario,
     }),
     [
       isHydrated,
@@ -209,6 +362,13 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
       resetProgress,
       setLanguages,
       setLessonProgress,
+      addTrackedError,
+      dismissTrackedError,
+      recordSRSReview,
+      addExperience,
+      incrementSpokenPhrases,
+      unlockCity,
+      completeScenario,
     ],
   );
 
