@@ -12,6 +12,9 @@ interface CorrectionRule {
   pattern: RegExp;
   replacement: string | ((match: string, ...groups: string[]) => string);
   explanation: string;
+  category?: 'grammar' | 'vocabulary' | 'preposition' | 'verb-tense' | 'pronunciation';
+  rule?: string;
+  example?: string;
 }
 
 const CORRECTION_RULES: readonly CorrectionRule[] = [
@@ -19,47 +22,98 @@ const CORRECTION_RULES: readonly CorrectionRule[] = [
     pattern: /\bi goed\b/i,
     replacement: 'I went',
     explanation: '“Go” is irregular in the past: go → went. / “Go” es irregular en pasado.',
+    category: 'verb-tense',
+    rule: 'Past irregular forms',
+    example: 'I went to the store yesterday.',
   },
   {
     pattern: /\bi am agree\b/i,
     replacement: 'I agree',
     explanation: 'We say “I agree”, without “am”. / Decimos “I agree”, sin “am”.',
+    category: 'grammar',
+    rule: 'Stative verbs',
+    example: 'I agree with your proposal.',
   },
   {
     pattern: /\bi have (\d+) years\b/i,
     replacement: (_match, age) => `I am ${age} years old`,
     explanation: 'For age, English uses “I am … years old”. / Para la edad usamos “I am”.',
+    category: 'grammar',
+    rule: 'Age expression with "to be"',
+    example: 'I am 25 years old.',
   },
   {
     pattern: /\bi no understand\b/i,
     replacement: "I don't understand",
     explanation: 'Use “don’t” to make a negative sentence. / Usa “don’t” para negar.',
+    category: 'grammar',
+    rule: 'Negative auxiliary with do/does',
+    example: "I don't understand this word.",
   },
   {
     pattern: /\bshe have\b/i,
     replacement: 'She has',
     explanation: 'With “she”, “have” changes to “has”. / Con “she”, “have” cambia a “has”.',
+    category: 'grammar',
+    rule: 'Third person singular',
+    example: 'She has a blue umbrella.',
+  },
+  {
+    pattern: /\bhe have\b/i,
+    replacement: 'He has',
+    explanation: 'With “he”, “have” changes to “has”. / Con “he”, “have” cambia a “has”.',
+    category: 'grammar',
+    rule: 'Third person singular',
+    example: 'He has an appointment today.',
   },
   {
     pattern: /\bdepend of\b/i,
     replacement: 'depend on',
     explanation: 'We say “depend on”, not “depend of”. / En inglés se usa “depend on”.',
+    category: 'preposition',
+    rule: 'Dependent prepositions',
+    example: 'It will depend on the weather.',
   },
   {
     pattern: /\blisten music\b/i,
     replacement: 'listen to music',
     explanation: 'The verb “listen” requires “to”: “listen to music”. / El verbo “listen” lleva la preposición “to”.',
+    category: 'preposition',
+    rule: 'Dependent prepositions',
+    example: 'I like to listen to music while running.',
   },
   {
     pattern: /\bpeople is\b/i,
     replacement: 'people are',
     explanation: '“People” is plural in English: “people are”. / “People” es un sustantivo plural.',
+    category: 'grammar',
+    rule: 'Collective plural nouns',
+    example: 'The people are very friendly here.',
+  },
+  {
+    pattern: /\bexplain me\b/i,
+    replacement: 'explain to me',
+    explanation: 'In English we say “explain to me”, not “explain me”. / Decimos “explain to me”.',
+    category: 'preposition',
+    rule: 'Ditransitive verbs',
+    example: 'Can you explain to me how this works?',
+  },
+  {
+    pattern: /\bprefer ([a-z]+) than ([a-z]+)\b/i,
+    replacement: (_match, item1, item2) => `prefer ${item1} to ${item2}`,
+    explanation: 'We say “prefer X to Y”, not “than”. / Decimos “prefer to”, no “prefer than”.',
+    category: 'grammar',
+    rule: 'Comparative preferences',
+    example: 'I prefer tea to coffee.',
   },
 ];
 
 export function createPedagogicalCorrection(userText: string): ChatCorrection | undefined {
   let corrected = userText;
   let explanation: string | undefined;
+  let category: ChatCorrection['category'];
+  let ruleName: string | undefined;
+  let example: string | undefined;
 
   for (const rule of CORRECTION_RULES) {
     if (rule.pattern.test(corrected)) {
@@ -68,6 +122,9 @@ export function createPedagogicalCorrection(userText: string): ChatCorrection | 
         : corrected.replace(rule.pattern, rule.replacement);
       if (!explanation) {
         explanation = rule.explanation;
+        category = rule.category;
+        ruleName = rule.rule;
+        example = rule.example;
       }
     }
   }
@@ -78,6 +135,9 @@ export function createPedagogicalCorrection(userText: string): ChatCorrection | 
     corrected = `I${trimmed.slice(1)}`;
     if (!explanation) {
       explanation = 'Remember to capitalize “I”. / Recuerda escribir “I” con mayúscula.';
+      category = 'grammar';
+      ruleName = 'Capitalization';
+      example = 'I am practicing my languages.';
     }
   } else if (/\bi\b/.test(corrected)) {
     corrected = corrected.replace(/\bi\b/g, 'I');
@@ -87,6 +147,9 @@ export function createPedagogicalCorrection(userText: string): ChatCorrection | 
     return {
       correctedText: corrected,
       explanation,
+      category,
+      rule: ruleName,
+      example,
     };
   }
 

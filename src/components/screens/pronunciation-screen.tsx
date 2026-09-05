@@ -221,6 +221,8 @@ export function PronunciationScreen() {
           <Text style={styles.speedLabel}>Escucha con atención:</Text>
           <View style={styles.speedButtonsRow}>
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Escuchar a velocidad lenta cero coma cinco"
               style={[styles.speedButton, selectedSpeed === 0.5 && styles.speedButtonActive]}
               onPress={() => handleListen(0.5)}
             >
@@ -229,6 +231,8 @@ export function PronunciationScreen() {
               </Text>
             </Pressable>
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Escuchar a velocidad normal cero coma ochenta y cinco"
               style={[styles.speedButton, selectedSpeed === 0.85 && styles.speedButtonActive]}
               onPress={() => handleListen(0.85)}
             >
@@ -237,6 +241,8 @@ export function PronunciationScreen() {
               </Text>
             </Pressable>
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Escuchar a velocidad natural uno coma dos"
               style={[styles.speedButton, selectedSpeed === 1.2 && styles.speedButtonActive]}
               onPress={() => handleListen(1.2)}
             >
@@ -247,7 +253,7 @@ export function PronunciationScreen() {
           </View>
 
           {/* Phonetic Tip Box */}
-          <View style={styles.tipBox}>
+          <View style={styles.tipBox} accessible={true} accessibilityLabel={`Clave articulatoria: ${current.focusPhoneme}. ${current.phonemeTip}`}>
             <View style={styles.tipHeader}>
               <Text style={styles.tipIcon}>👄</Text>
               <Text style={styles.tipTitle}>Clave Articulatoria: {current.focusPhoneme}</Text>
@@ -258,6 +264,8 @@ export function PronunciationScreen() {
           {/* Practice Action */}
           <View style={styles.practiceSection}>
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={practiced ? 'Frase practicada, quince de experiencia sumados' : 'Confirmar práctica oral en voz alta'}
               style={[styles.practiceButton, practiced && styles.practiceButtonDone]}
               onPress={handleRecordSelfPractice}
             >
@@ -271,6 +279,8 @@ export function PronunciationScreen() {
         {/* Navigation */}
         <View style={styles.navRow}>
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Reto fonético anterior"
             style={styles.navSecondaryButton}
             onPress={() => {
               stopSpeaking();
@@ -279,7 +289,12 @@ export function PronunciationScreen() {
           >
             <Text style={styles.navSecondaryText}>‹ Anterior</Text>
           </Pressable>
-          <Pressable style={styles.navPrimaryButton} onPress={handleNext}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Siguiente reto fonético"
+            style={styles.navPrimaryButton}
+            onPress={handleNext}
+          >
             <Text style={styles.navPrimaryText}>Siguiente Reto ›</Text>
           </Pressable>
         </View>
