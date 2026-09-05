@@ -42,7 +42,7 @@ export function AchievementsScreen() {
     : ACHIEVEMENTS.filter((a) => a.categoria === selectedCat);
 
   return (
-    <ScreenContainer title="Logros y Trofeos">
+    <ScreenContainer title="Logros y Trofeos" scrollable={false}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         {/* Banner Summary */}
         <View style={styles.heroCard}>

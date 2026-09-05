@@ -27,7 +27,7 @@ export function ConversationResultScreen() {
   const fluencyScore = accuracy >= 80 ? 'Excelente' : accuracy >= 60 ? 'Buena' : 'En progreso';
 
   return (
-    <ScreenContainer title="Resumen de Conversación">
+    <ScreenContainer title="Resumen de Conversación" scrollable={false}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         {/* Celebration Header */}
         <View style={styles.celebrationCard}>

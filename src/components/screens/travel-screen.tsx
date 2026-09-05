@@ -7,7 +7,7 @@ import { CITIES } from '@/data/cities';
 import type { CityAdventure } from '@/types/learning';
 
 export function TravelScreen() {
-  const { progress } = useProgress();
+  const { progress, unlockCity } = useProgress();
 
   const startCityTour = (city: CityAdventure) => {
     router.push({
@@ -38,6 +38,9 @@ export function TravelScreen() {
         <View style={styles.citiesList}>
           {CITIES.map((city) => {
             const isUnlocked = progress.unlockedCities?.includes(city.id) || city.id === 'london' || city.id === 'madrid';
+            const requiredXp = city.xpReward;
+            const canUnlock = progress.experiencia >= requiredXp;
+
             return (
               <View key={city.id} style={[styles.cityCard, !isUnlocked && styles.cityCardLocked]}>
                 <View style={styles.cityHeader}>
@@ -70,12 +73,29 @@ export function TravelScreen() {
                   <Text style={styles.vocabWords}>{city.vocabulary.join(' · ')}</Text>
                 </View>
 
-                <Pressable
-                  style={styles.exploreButton}
-                  onPress={() => startCityTour(city)}
-                >
-                  <Text style={styles.exploreText}>🚀 Explorar {city.name}</Text>
-                </Pressable>
+                {isUnlocked ? (
+                  <Pressable
+                    style={styles.exploreButton}
+                    onPress={() => startCityTour(city)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Explorar ${city.name}`}
+                  >
+                    <Text style={styles.exploreText}>🚀 Explorar {city.name}</Text>
+                  </Pressable>
+                ) : canUnlock ? (
+                  <Pressable
+                    style={[styles.exploreButton, styles.unlockButton]}
+                    onPress={() => unlockCity(city.id)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Desbloquear ${city.name}`}
+                  >
+                    <Text style={styles.exploreText}>🔓 Desbloquear Ciudad</Text>
+                  </Pressable>
+                ) : (
+                  <View style={[styles.exploreButton, styles.lockedButton]}>
+                    <Text style={styles.lockedText}>🔒 Requiere {requiredXp} XP ({progress.experiencia}/{requiredXp})</Text>
+                  </View>
+                )}
               </View>
             );
           })}
@@ -148,5 +168,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 4,
   },
+  unlockButton: {
+    backgroundColor: AppColors.blue,
+  },
+  lockedButton: {
+    backgroundColor: AppColors.surfaceBorder,
+  },
   exploreText: { color: AppColors.text, fontWeight: '900', fontSize: 15 },
+  lockedText: { color: AppColors.textMuted, fontWeight: '700', fontSize: 13 },
 });

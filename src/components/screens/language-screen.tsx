@@ -42,7 +42,13 @@ export function LanguageScreen() {
         <Text style={styles.sectionTitle}>Hablo (Nativo):</Text>
         <View style={styles.grid}>
           {OPTIONS.map(option => (
-            <Pressable key={`nativo-${option.code}`} style={[styles.option, nativo === option.code && styles.selected]} onPress={() => setNativo(option.code)}>
+            <Pressable
+              key={`nativo-${option.code}`}
+              style={[styles.option, nativo === option.code && styles.selected]}
+              onPress={() => setNativo(option.code)}
+              accessibilityRole="button"
+              accessibilityLabel={`Idioma nativo: ${option.label}${nativo === option.code ? ', seleccionado' : ''}`}
+            >
               <Text style={styles.flag}>{option.flag}</Text>
               <Text style={styles.label}>{option.label}</Text>
             </Pressable>
@@ -58,6 +64,9 @@ export function LanguageScreen() {
                 key={`objetivo-${option.code}`}
                 style={[styles.option, objetivo === option.code && styles.selected, !hasContent && styles.disabledOption]}
                 onPress={() => hasContent && setObjetivo(option.code)}
+                accessibilityRole="button"
+                accessibilityLabel={`Aprender: ${option.label}${objetivo === option.code ? ', seleccionado' : ''}${!hasContent ? ', próximamente' : ''}`}
+                disabled={!hasContent}
               >
                 <Text style={[styles.flag, !hasContent && styles.disabledText]}>{option.flag}</Text>
                 <View style={styles.labelContainer}>
