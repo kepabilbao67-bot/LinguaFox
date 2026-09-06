@@ -140,7 +140,8 @@ export function sanitizePhonemeProgress(input: unknown): Record<string, PhonemeP
   if (typeof input !== 'object' || input === null || Array.isArray(input)) return {};
   const result: Record<string, PhonemeProgress> = {};
   for (const [key, val] of Object.entries(input)) {
-    if (typeof val === 'object' && val !== null) {
+    // Skip arrays and null values
+    if (!Array.isArray(val) && typeof val === 'object' && val !== null) {
       const v = val as Partial<PhonemeProgress>;
       result[key] = {
         phonemeKey: typeof v.phonemeKey === 'string' ? v.phonemeKey : key,
