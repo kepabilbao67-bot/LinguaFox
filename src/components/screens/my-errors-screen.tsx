@@ -149,16 +149,64 @@ export function MyErrorsScreen() {
 
                 <Pressable
                   style={styles.whyToggle}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   onPress={() => setExpandedId(isExpanded ? null : error.id)}
                 >
                   <Text style={styles.whyToggleText}>
-                    {isExpanded ? '▲ Ocultar explicación' : '▼ ¿Por qué? Ver regla pedagógica'}
+                    {isExpanded ? '▲ Ocultar desglose pedagógico' : '▼ ¿Por qué? Ver regla y desglose pedagógico'}
                   </Text>
                 </Pressable>
 
                 {isExpanded && (
                   <View style={styles.explanationBox}>
-                    <Text style={styles.explanationText}>📖 {error.explanation}</Text>
+                    {error.rule ? (
+                      <View style={styles.pedagogicalRuleBox}>
+                        <Text style={styles.pedagogicalRuleLabel}>📏 REGLA CLAVE</Text>
+                        <Text style={styles.pedagogicalRuleText}>{error.rule}</Text>
+                      </View>
+                    ) : null}
+
+                    <View style={styles.pedagogicalSection}>
+                      <Text style={styles.pedagogicalHeading}>❓ ¿Por qué sucede?</Text>
+                      <Text style={styles.explanationText}>
+                        {error.why || error.explanation}
+                      </Text>
+                    </View>
+
+                    {error.how ? (
+                      <View style={styles.pedagogicalSection}>
+                        <Text style={styles.pedagogicalHeading}>🛠️ Cómo usarlo bien</Text>
+                        <Text style={styles.explanationText}>{error.how}</Text>
+                      </View>
+                    ) : null}
+
+                    {error.when ? (
+                      <View style={styles.pedagogicalSection}>
+                        <Text style={styles.pedagogicalHeading}>🕒 Cuándo usar</Text>
+                        <Text style={styles.explanationText}>{error.when}</Text>
+                      </View>
+                    ) : null}
+
+                    {error.whenNot ? (
+                      <View style={styles.pedagogicalSection}>
+                        <Text style={styles.pedagogicalHeading}>🚫 Cuándo NO usar</Text>
+                        <Text style={styles.explanationText}>{error.whenNot}</Text>
+                      </View>
+                    ) : null}
+
+                    {error.example ? (
+                      <View style={styles.pedagogicalExampleBox}>
+                        <Text style={styles.pedagogicalExampleLabel}>💡 Ejemplo en contexto:</Text>
+                        <Text style={styles.pedagogicalExampleText}>{`"${error.example}"`}</Text>
+                      </View>
+                    ) : null}
+
+                    {error.checkExercise ? (
+                      <View style={styles.pedagogicalCheckExerciseBox}>
+                        <Text style={styles.pedagogicalCheckExerciseLabel}>✏️ Ejercicio de comprobación:</Text>
+                        <Text style={styles.pedagogicalCheckExerciseText}>{error.checkExercise}</Text>
+                      </View>
+                    ) : null}
                   </View>
                 )}
 
@@ -244,6 +292,8 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.surface,
     paddingHorizontal: 14,
     paddingVertical: 8,
+    minHeight: 44,
+    justifyContent: 'center',
     borderRadius: 99,
     borderWidth: 1,
     borderColor: AppColors.surfaceBorder,
@@ -281,38 +331,109 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(34, 197, 94, 0.4)',
     backgroundColor: 'rgba(34, 197, 94, 0.04)',
   },
-  audioButtonGroup: { flexDirection: 'row', gap: 6 },
+  audioButtonGroup: { flexDirection: 'row', gap: 8 },
   audioButtonSmall: {
     backgroundColor: AppColors.surfaceRaised,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
   },
   audioButton: {
     backgroundColor: AppColors.surfaceRaised,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  audioIcon: { fontSize: 16 },
+  audioIcon: { fontSize: 18 },
   phraseRow: { gap: 2 },
   wrongLabel: { color: AppColors.danger, fontSize: 12, fontWeight: '800' },
   wrongText: { color: AppColors.textMuted, fontSize: 15, textDecorationLine: 'line-through' },
   correctLabel: { color: AppColors.success, fontSize: 12, fontWeight: '800', marginTop: 4 },
   correctText: { color: AppColors.text, fontSize: 16, fontWeight: '700' },
-  whyToggle: { marginTop: 4 },
+  whyToggle: {
+    marginTop: 4,
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingVertical: 6,
+  },
   whyToggleText: { color: AppColors.blueLight, fontSize: 13, fontWeight: '700' },
   explanationBox: {
     backgroundColor: AppColors.surfaceRaised,
-    padding: 12,
+    padding: 14,
     borderRadius: 12,
     marginTop: 4,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: AppColors.surfaceBorder,
+  },
+  pedagogicalRuleBox: {
+    backgroundColor: 'rgba(255, 122, 0, 0.1)',
+    borderRadius: 8,
+    padding: 10,
+    borderLeftWidth: 3,
+    borderLeftColor: AppColors.primary,
+  },
+  pedagogicalRuleLabel: {
+    color: AppColors.primaryBright,
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  pedagogicalRuleText: {
+    color: AppColors.text,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  pedagogicalSection: {
+    gap: 3,
+  },
+  pedagogicalHeading: {
+    color: AppColors.textMuted,
+    fontSize: 12,
+    fontWeight: '800',
   },
   explanationText: { color: AppColors.text, fontSize: 13, lineHeight: 19 },
+  pedagogicalExampleBox: {
+    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    borderRadius: 8,
+    padding: 10,
+    borderLeftWidth: 3,
+    borderLeftColor: AppColors.blueLight,
+  },
+  pedagogicalExampleLabel: {
+    color: AppColors.blueLight,
+    fontSize: 11,
+    fontWeight: '800',
+    marginBottom: 2,
+  },
+  pedagogicalExampleText: {
+    color: AppColors.text,
+    fontSize: 13,
+    fontStyle: 'italic',
+  },
+  pedagogicalCheckExerciseBox: {
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    borderRadius: 8,
+    padding: 10,
+    borderLeftWidth: 3,
+    borderLeftColor: AppColors.success,
+  },
+  pedagogicalCheckExerciseLabel: {
+    color: AppColors.success,
+    fontSize: 11,
+    fontWeight: '800',
+    marginBottom: 2,
+  },
+  pedagogicalCheckExerciseText: {
+    color: AppColors.text,
+    fontSize: 13,
+    fontWeight: '600',
+  },
   reviewQuizBox: {
     backgroundColor: AppColors.surfaceRaised,
     borderRadius: 14,
@@ -334,6 +455,8 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.surface,
     paddingVertical: 12,
     paddingHorizontal: 14,
+    minHeight: 48,
+    justifyContent: 'center',
     borderRadius: 10,
     borderWidth: 1,
     borderColor: AppColors.surfaceBorder,
@@ -373,8 +496,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 122, 0, 0.15)',
     borderWidth: 1,
     borderColor: AppColors.primary,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    minHeight: 44,
+    justifyContent: 'center',
     borderRadius: 10,
   },
   reviewBtnText: {
@@ -386,8 +511,10 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.surfaceRaised,
     borderWidth: 1,
     borderColor: AppColors.surfaceBorder,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    minHeight: 44,
+    justifyContent: 'center',
     borderRadius: 10,
   },
   deleteBtnText: {

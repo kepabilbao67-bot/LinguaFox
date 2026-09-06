@@ -170,3 +170,73 @@ describe('Pronunciation Challenge ID Migration in sanitizeProgress', () => {
     });
   });
 });
+
+describe('Pedagogical TrackedError Sanitation in sanitizeProgress', () => {
+  it('preserva campos pedagógicos ricos válidos (rule, why, how, when, whenNot, example, checkExercise)', () => {
+    const raw = {
+      trackedErrors: [
+        {
+          id: 'err-test-1',
+          userText: 'I goed there',
+          correctedText: 'I went there',
+          explanation: 'Go es irregular',
+          category: 'verb-tense',
+          rule: 'go → went',
+          example: 'We went home',
+          why: 'Go es irregular en pasado',
+          how: 'Usa went',
+          when: 'Acciones concluidas en el pasado',
+          whenNot: 'Con auxiliar did',
+          checkExercise: 'Completa: She ____',
+          language: 'en',
+          timestamp: 1700000000,
+          reviewed: false,
+          mastered: false,
+        },
+      ],
+    };
+
+    const sanitized = sanitizeProgress(raw);
+    expect(sanitized.trackedErrors).toHaveLength(1);
+    const err = sanitized.trackedErrors![0];
+    expect(err.rule).toBe('go → went');
+    expect(err.example).toBe('We went home');
+    expect(err.why).toBe('Go es irregular en pasado');
+    expect(err.how).toBe('Usa went');
+    expect(err.when).toBe('Acciones concluidas en el pasado');
+    expect(err.whenNot).toBe('Con auxiliar did');
+    expect(err.checkExercise).toBe('Completa: She ____');
+  });
+
+  it('descarta campos pedagógicos inválidos o corruptos convirtiéndolos en undefined', () => {
+    const raw = {
+      trackedErrors: [
+        {
+          id: 'err-corrupted-fields',
+          userText: 'I goed',
+          correctedText: 'I went',
+          category: 'invalid-cat',
+          rule: 12345, // invalid
+          example: null, // invalid
+          why: {}, // invalid
+          how: ['invalid array'], // invalid
+          when: undefined,
+          whenNot: false, // invalid
+          checkExercise: 999, // invalid
+        },
+      ],
+    };
+
+    const sanitized = sanitizeProgress(raw);
+    expect(sanitized.trackedErrors).toHaveLength(1);
+    const err = sanitized.trackedErrors![0];
+    expect(err.category).toBe('grammar'); // fallback
+    expect(err.rule).toBeUndefined();
+    expect(err.example).toBeUndefined();
+    expect(err.why).toBeUndefined();
+    expect(err.how).toBeUndefined();
+    expect(err.when).toBeUndefined();
+    expect(err.whenNot).toBeUndefined();
+    expect(err.checkExercise).toBeUndefined();
+  });
+});

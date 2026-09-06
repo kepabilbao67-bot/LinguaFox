@@ -185,6 +185,13 @@ export interface TrackedError {
   correctedText: string;
   explanation: string;
   category: 'grammar' | 'vocabulary' | 'preposition' | 'verb-tense' | 'pronunciation';
+  rule?: string;
+  example?: string;
+  why?: string;
+  how?: string;
+  when?: string;
+  whenNot?: string;
+  checkExercise?: string;
   language: LanguageCode;
   timestamp: number;
   reviewed: boolean;
