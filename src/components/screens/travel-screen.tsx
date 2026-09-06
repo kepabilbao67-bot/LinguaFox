@@ -10,10 +10,19 @@ export function TravelScreen() {
   const { progress, unlockCity } = useProgress();
 
   const startCityTour = (city: CityAdventure) => {
+    const characterMap: Record<string, string> = {
+      roma: 'luca',
+      madrid: 'sofia',
+      berlin: 'hans',
+      lisboa: 'ana',
+    };
+    const characterId = characterMap[city.id] ?? 'emma';
+
     router.push({
       pathname: '/chat',
       params: {
-        characterId: city.id === 'roma' ? 'luca' : city.id === 'madrid' ? 'sofia' : city.id === 'berlin' ? 'hans' : city.id === 'lisboa' ? 'ana' : 'emma',
+        cityId: city.id,
+        characterId,
         mode: 'travel',
         initialGreeting: `¡Bienvenido a ${city.name} ${city.flag}! Vamos a recorrer ${city.landmarks[0]} y hablar en su idioma.`,
       },
@@ -37,9 +46,11 @@ export function TravelScreen() {
         {/* Cities List */}
         <View style={styles.citiesList}>
           {CITIES.map((city) => {
-            const isUnlocked = progress.unlockedCities?.includes(city.id) || city.id === 'london' || city.id === 'madrid';
+            const isInitiallyUnlocked = city.id === 'london' || city.id === 'madrid';
+            const isUnlocked = isInitiallyUnlocked || progress.unlockedCities?.includes(city.id);
+            const hasEnoughXp = progress.experiencia >= city.unlockXp;
+            const canAccess = isUnlocked || hasEnoughXp;
             const requiredXp = city.unlockXp;
-            const canUnlock = progress.experiencia >= requiredXp;
 
             return (
               <View key={city.id} style={[styles.cityCard, !isUnlocked && styles.cityCardLocked]}>
@@ -82,10 +93,12 @@ export function TravelScreen() {
                   >
                     <Text style={styles.exploreText}>🚀 Explorar {city.name}</Text>
                   </Pressable>
-                ) : canUnlock ? (
+                ) : canAccess ? (
                   <Pressable
                     style={[styles.exploreButton, styles.unlockButton]}
-                    onPress={() => unlockCity(city.id)}
+                    onPress={() => {
+                      unlockCity(city.id);
+                    }}
                     accessibilityRole="button"
                     accessibilityLabel={`Desbloquear ${city.name}`}
                   >

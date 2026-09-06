@@ -39,7 +39,7 @@ interface ProgressContextValue {
   incrementSpokenPhrases: () => void;
   unlockCity: (cityId: string) => void;
   completeScenario: (scenarioId: string) => void;
-  completeCityAdventure: (cityId: string, xpReward: number) => void;
+  completeCityAdventure: (cityId: string) => boolean;
   claimDailyChallenge: (challengeId: string, xpReward?: number) => void;
   recordCompetencyResult: (
     language: LanguageCode,
@@ -562,19 +562,44 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
     });
   }, []);
 
-  const completeCityAdventure = useCallback((cityId: string, xpReward: number) => {
+  const completeCityAdventure = useCallback((cityId: string): boolean => {
+    // Importar getCityById aquí sería circular. Usamos una lookup simple.
+    // En un mejor diseño, pasaríamos la ciudad entera, pero para mínimo cambio:
+    // validar que la ciudad existe.
+    const VALID_CITY_IDS = ['london', 'madrid', 'roma', 'lisboa', 'paris', 'berlin', 'newyork'];
+    if (!VALID_CITY_IDS.includes(cityId)) {
+      return false; // Ciudad inválida, no otorgar nada
+    }
+
+    let wasCompleted = false;
     setProgress((current) => {
       const completed = current.completedCities ?? [];
       if (completed.includes(cityId)) {
-        // Already completed, don't award XP again
-        return current;
+        return current; // Ya completada, sin recompensa
       }
+
+      // Obtener el reward para esta ciudad (tabla hardcoded mínima aquí para evitar imports circulares)
+      const cityRewards: Record<string, number> = {
+        london: 150,
+        madrid: 150,
+        roma: 150,
+        lisboa: 150,
+        paris: 180,
+        berlin: 200,
+        newyork: 220,
+      };
+      const xpReward = cityRewards[cityId] ?? 0;
+      if (xpReward <= 0) return current;
+
+      wasCompleted = true;
       return {
         ...current,
         completedCities: [...completed, cityId],
         experiencia: current.experiencia + xpReward,
       };
     });
+
+    return wasCompleted;
   }, []);
 
   const claimDailyChallenge = useCallback((challengeId: string, xpReward: number = 20) => {

@@ -15,7 +15,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppColors } from '@/constants/app-theme';
 import { getCharacterById } from '@/data/characters';
-import { getCityById } from '@/data/cities';
 import { getScenarioById } from '@/data/scenarios';
 import { useChatHistory } from '@/hooks/use-chat-history';
 import { useProgress } from '@/hooks/use-progress';
@@ -30,6 +29,7 @@ export function ChatScreen() {
   const params = useLocalSearchParams<{
     characterId?: string;
     scenarioId?: string;
+    cityId?: string;
     mode?: ConversationMode;
     initialGreeting?: string;
   }>();
@@ -203,16 +203,11 @@ export function ChatScreen() {
   };
 
   const finishConversation = () => {
-    if (mode === 'travel' && params.characterId) {
-      // En travel, la ciudad es la misma que characterId mapeado
-      const cityId = params.characterId === 'luca' ? 'roma'
-        : params.characterId === 'sofia' ? 'madrid'
-        : params.characterId === 'hans' ? 'berlin'
-        : params.characterId === 'ana' ? 'lisboa'
-        : 'london';
-      const city = getCityById(cityId);
-      if (city) {
-        completeCityAdventure(cityId, city.xpReward);
+    if (mode === 'travel' && params.cityId) {
+      const success = completeCityAdventure(params.cityId);
+      if (!success) {
+        // Ciudad no existe o ya fue completada, proceder sin XP
+        console.warn(`City adventure ${params.cityId} could not be completed.`);
       }
     } else if (scenario) {
       completeScenario(scenario.id);
