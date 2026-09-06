@@ -1,19 +1,20 @@
-import type {
-  AppSettings,
-  CompetencyStatsByLevel,
-  CrownLevel,
-  DailyActivityMetrics,
-  LanguageCode,
-  LessonCrown,
-  ProgressState,
-  SRSCard,
-  TrackedError,
-  WeeklyLeagueState,
-} from '../types/learning';
+import { getIsoWeekKey } from '../services/leagues';
 import type { LeagueTier } from '../types/leagues';
+import type {
+    AppSettings,
+    CompetencyStatsByLevel,
+    CrownLevel,
+    DailyActivityMetrics,
+    LanguageCode,
+    LessonCrown,
+    PhonemeProgress,
+    ProgressState,
+    SRSCard,
+    TrackedError,
+    WeeklyLeagueState,
+} from '../types/learning';
 import { sumBestStars } from './rewards';
 import { getCalendarOrdinal } from './streak-logic';
-import { getIsoWeekKey } from '../services/leagues';
 
 export const STORAGE_KEY = '@linguafox/progress/v1';
 
@@ -48,6 +49,7 @@ export const DEFAULT_PROGRESS: ProgressState = {
   srs: {},
   trackedErrors: [],
   unlockedCities: [],
+  completedCities: [],
   completedScenarios: [],
   spokenPhrasesCount: 0,
   listeningActivitiesCount: 0,
@@ -56,6 +58,7 @@ export const DEFAULT_PROGRESS: ProgressState = {
   activityByDate: {},
   competencyStats: {},
   completedPronunciationChallenges: {},
+  phonemeProgress: {},
   weeklyLeague: {
     tier: 'bronce',
     weekKey: getIsoWeekKey(),
@@ -130,6 +133,25 @@ export function sanitizeCompletedPronunciationChallenges(input: unknown): Record
     }
   }
 
+  return result;
+}
+
+export function sanitizePhonemeProgress(input: unknown): Record<string, PhonemeProgress> {
+  if (typeof input !== 'object' || input === null || Array.isArray(input)) return {};
+  const result: Record<string, PhonemeProgress> = {};
+  for (const [key, val] of Object.entries(input)) {
+    if (typeof val === 'object' && val !== null) {
+      const v = val as Partial<PhonemeProgress>;
+      result[key] = {
+        phonemeKey: typeof v.phonemeKey === 'string' ? v.phonemeKey : key,
+        attempts: typeof v.attempts === 'number' && Number.isFinite(v.attempts) ? Math.max(0, Math.floor(v.attempts)) : 0,
+        correctDiscrimination: typeof v.correctDiscrimination === 'number' && Number.isFinite(v.correctDiscrimination) ? Math.max(0, Math.floor(v.correctDiscrimination)) : 0,
+        difficult: v.difficult === true,
+        mastered: v.mastered === true,
+        lastPracticedAt: typeof v.lastPracticedAt === 'number' && Number.isFinite(v.lastPracticedAt) ? v.lastPracticedAt : Date.now(),
+      };
+    }
+  }
   return result;
 }
 
@@ -329,6 +351,7 @@ export function sanitizeProgress(raw: unknown): ProgressState {
     srs: sanitizeSrs(value.srs),
     trackedErrors: sanitizeTrackedErrors(value.trackedErrors),
     unlockedCities: sanitizeStringList(value.unlockedCities),
+    completedCities: sanitizeStringList(value.completedCities),
     completedScenarios: sanitizeStringList(value.completedScenarios),
     spokenPhrasesCount: typeof value.spokenPhrasesCount === 'number' && Number.isFinite(value.spokenPhrasesCount) ? Math.max(0, Math.floor(value.spokenPhrasesCount)) : 0,
     listeningActivitiesCount: typeof value.listeningActivitiesCount === 'number' && Number.isFinite(value.listeningActivitiesCount) ? Math.max(0, Math.floor(value.listeningActivitiesCount)) : 0,
@@ -337,6 +360,7 @@ export function sanitizeProgress(raw: unknown): ProgressState {
     activityByDate: sanitizeActivityByDate(value.activityByDate),
     competencyStats: sanitizeCompetencyStats(value.competencyStats),
     completedPronunciationChallenges: sanitizeCompletedPronunciationChallenges(value.completedPronunciationChallenges),
+    phonemeProgress: sanitizePhonemeProgress(value.phonemeProgress),
     weeklyLeague: (() => {
       const VALID_TIERS = new Set<LeagueTier>(['bronce', 'plata', 'oro', 'zafiro', 'diamante']);
       if (typeof value.weeklyLeague === 'object' && value.weeklyLeague !== null) {

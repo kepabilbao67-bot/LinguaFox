@@ -176,6 +176,7 @@ export interface CityAdventure {
   landmarks: readonly string[];
   vocabulary: readonly string[];
   scenarios: readonly string[];
+  unlockXp: number;
   xpReward: number;
 }
 
@@ -221,6 +222,15 @@ export interface CompetencyStatsByLevel {
   speaking?: CompetencyCount;
 }
 
+export interface PhonemeProgress {
+  phonemeKey: string;
+  attempts: number;
+  correctDiscrimination: number;
+  difficult: boolean;
+  mastered: boolean;
+  lastPracticedAt: number;
+}
+
 export interface ProgressState {
   leccionesCompletadas: string[];
   estrellas: number;
@@ -249,6 +259,7 @@ export interface ProgressState {
   srs: Record<string, SRSCard>;
   trackedErrors?: readonly TrackedError[];
   unlockedCities?: readonly string[];
+  completedCities?: readonly string[];
   completedScenarios?: readonly string[];
   spokenPhrasesCount?: number;
   listeningActivitiesCount?: number;
@@ -257,6 +268,7 @@ export interface ProgressState {
   activityByDate?: Record<string, DailyActivityMetrics>;
   competencyStats?: Record<string, CompetencyStatsByLevel>;
   completedPronunciationChallenges?: Record<string, string>;
+  phonemeProgress?: Record<string, PhonemeProgress>;
   weeklyLeague?: WeeklyLeagueState;
 }
 

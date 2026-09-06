@@ -1,15 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import type { CEFRLevel, DailyActivityMetrics, LanguageCode, ProgressState, TrackedError } from '@/types/learning';
-import type { LeagueTier } from '@/types/leagues';
-import { getIsoWeekKey, generateWeeklyDivision, calculateLeagueOutcome } from '@/services/leagues';
-import { calculateQuizStars } from '@/utils/rewards';
 import { ACHIEVEMENTS, evaluateAchievements } from '@/data/achievements';
-import { calculateNewStreak, getLocalDateKey } from '@/utils/streak-logic';
+import { calculateLeagueOutcome, generateWeeklyDivision, getIsoWeekKey } from '@/services/leagues';
+import type { LeagueTier } from '@/types/leagues';
+import type { CEFRLevel, DailyActivityMetrics, LanguageCode, PhonemeProgress, ProgressState, TrackedError } from '@/types/learning';
+import { DEFAULT_PROGRESS, getGlobalStars, LEGACY_PRONUNCIATION_CHALLENGE_IDS, safeLoadProgress, sanitizeProgress, STORAGE_KEY } from '@/utils/progress-storage';
+import { calculateQuizStars } from '@/utils/rewards';
 import { reviewCard } from '@/utils/srs';
-import { safeLoadProgress, sanitizeProgress, DEFAULT_PROGRESS, STORAGE_KEY, getGlobalStars, LEGACY_PRONUNCIATION_CHALLENGE_IDS } from '@/utils/progress-storage';
+import { calculateNewStreak, getLocalDateKey } from '@/utils/streak-logic';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync().catch(() => {
@@ -34,9 +34,12 @@ interface ProgressContextValue {
   recordSpeakingPractice: () => void;
   recordListeningPractice: () => void;
   recordPronunciationPractice: (challengeId: string) => boolean;
+  recordPhonemeDiscrimination: (phonemeKey: string, isCorrect: boolean) => { awardedXp: number; isMastered: boolean };
+  recordShadowingPractice: (challengeId: string, selfEval: 'mastered' | 'needs_practice') => boolean;
   incrementSpokenPhrases: () => void;
   unlockCity: (cityId: string) => void;
   completeScenario: (scenarioId: string) => void;
+  completeCityAdventure: (cityId: string, xpReward: number) => void;
   claimDailyChallenge: (challengeId: string, xpReward?: number) => void;
   recordCompetencyResult: (
     language: LanguageCode,
@@ -388,6 +391,90 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
     return awarded;
   }, []);
 
+  const recordPhonemeDiscrimination = useCallback((phonemeKey: string, isCorrect: boolean) => {
+    if (!phonemeKey) return { awardedXp: 0, isMastered: false };
+    let awardedXp = 0;
+    let isMastered = false;
+    const todayKey = getLocalDateKey();
+
+    setProgress((current) => {
+      const currentMap = current.phonemeProgress ?? {};
+      const prev = currentMap[phonemeKey] ?? {
+        phonemeKey,
+        attempts: 0,
+        correctDiscrimination: 0,
+        difficult: false,
+        mastered: false,
+        lastPracticedAt: 0,
+      };
+
+      const newAttempts = prev.attempts + 1;
+      const newCorrect = prev.correctDiscrimination + (isCorrect ? 1 : 0);
+      const ratio = newCorrect / newAttempts;
+      const newlyMastered = !prev.mastered && newAttempts >= 3 && ratio >= 0.75;
+      const nowMastered = prev.mastered || newlyMastered;
+      const isDifficult = newAttempts >= 3 && ratio < 0.6;
+
+      isMastered = nowMastered;
+      // 5 XP por discriminación correcta; +10 XP bonus la primera vez que se domina el fonema; 1 XP por esfuerzo si falla
+      awardedXp = isCorrect ? (newlyMastered ? 15 : 5) : 1;
+
+      const updatedPhoneme: PhonemeProgress = {
+        phonemeKey,
+        attempts: newAttempts,
+        correctDiscrimination: newCorrect,
+        difficult: isDifficult,
+        mastered: nowMastered,
+        lastPracticedAt: Date.now(),
+      };
+
+      return {
+        ...current,
+        ...calculateNewStreak(current, Date.now()),
+        experiencia: current.experiencia + awardedXp,
+        listeningActivitiesCount: (current.listeningActivitiesCount ?? 0) + 1,
+        phonemeProgress: {
+          ...currentMap,
+          [phonemeKey]: updatedPhoneme,
+        },
+        activityByDate: recordDailyActivity(current.activityByDate, 'listeningActivities', todayKey),
+      };
+    });
+
+    return { awardedXp, isMastered };
+  }, []);
+
+  const recordShadowingPractice = useCallback((challengeId: string, selfEval: 'mastered' | 'needs_practice') => {
+    if (!challengeId) return false;
+    let awarded = false;
+    const nowStr = new Date().toISOString();
+    const todayKey = getLocalDateKey();
+    const canonicalId = LEGACY_PRONUNCIATION_CHALLENGE_IDS[challengeId] ?? challengeId;
+
+    setProgress((current) => {
+      const completed = current.completedPronunciationChallenges ?? {};
+      const isAlreadyCompleted = Boolean(completed[canonicalId]);
+      const xpToAdd = isAlreadyCompleted ? 0 : 15;
+      if (!isAlreadyCompleted) {
+        awarded = true;
+      }
+
+      return {
+        ...current,
+        ...calculateNewStreak(current, Date.now()),
+        spokenPhrasesCount: (current.spokenPhrasesCount ?? 0) + 1,
+        experiencia: current.experiencia + xpToAdd,
+        completedPronunciationChallenges: {
+          ...completed,
+          [canonicalId]: nowStr,
+        },
+        activityByDate: recordDailyActivity(current.activityByDate, 'spokenPhrases', todayKey),
+      };
+    });
+
+    return awarded;
+  }, []);
+
   const incrementSpokenPhrases = recordSpeakingPractice;
 
   const unlockCity = useCallback((cityId: string) => {
@@ -471,6 +558,21 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
         ...current,
         completedScenarios: [...completed, scenarioId],
         experiencia: current.experiencia + 50,
+      };
+    });
+  }, []);
+
+  const completeCityAdventure = useCallback((cityId: string, xpReward: number) => {
+    setProgress((current) => {
+      const completed = current.completedCities ?? [];
+      if (completed.includes(cityId)) {
+        // Already completed, don't award XP again
+        return current;
+      }
+      return {
+        ...current,
+        completedCities: [...completed, cityId],
+        experiencia: current.experiencia + xpReward,
       };
     });
   }, []);
@@ -559,9 +661,12 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
       recordSpeakingPractice,
       recordListeningPractice,
       recordPronunciationPractice,
+      recordPhonemeDiscrimination,
+      recordShadowingPractice,
       incrementSpokenPhrases,
       unlockCity,
       completeScenario,
+      completeCityAdventure,
       claimDailyChallenge,
       recordCompetencyResult,
     }),
@@ -583,9 +688,12 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
       recordSpeakingPractice,
       recordListeningPractice,
       recordPronunciationPractice,
+      recordPhonemeDiscrimination,
+      recordShadowingPractice,
       incrementSpokenPhrases,
       unlockCity,
       completeScenario,
+      completeCityAdventure,
       claimDailyChallenge,
       recordCompetencyResult,
     ],

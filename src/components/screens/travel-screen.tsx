@@ -1,10 +1,10 @@
-import { router } from 'expo-router';
-import { Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
 import { ScreenContainer } from '@/components/screen-container';
 import { AppColors } from '@/constants/app-theme';
-import { useProgress } from '@/hooks/use-progress';
 import { CITIES } from '@/data/cities';
+import { useProgress } from '@/hooks/use-progress';
 import type { CityAdventure } from '@/types/learning';
+import { router } from 'expo-router';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export function TravelScreen() {
   const { progress, unlockCity } = useProgress();
@@ -38,7 +38,7 @@ export function TravelScreen() {
         <View style={styles.citiesList}>
           {CITIES.map((city) => {
             const isUnlocked = progress.unlockedCities?.includes(city.id) || city.id === 'london' || city.id === 'madrid';
-            const requiredXp = city.xpReward;
+            const requiredXp = city.unlockXp;
             const canUnlock = progress.experiencia >= requiredXp;
 
             return (

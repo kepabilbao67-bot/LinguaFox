@@ -12,6 +12,7 @@ export const CITIES: readonly CityAdventure[] = [
     landmarks: ['Big Ben', 'Tower Bridge', 'Hyde Park', 'Camden Market'],
     vocabulary: ['underground', 'ticket', 'afternoon tea', 'museum', 'bridge', 'umbrella'],
     scenarios: ['cafe-order', 'airport-checkin'],
+    unlockXp: 0,
     xpReward: 150,
   },
   {
@@ -25,6 +26,7 @@ export const CITIES: readonly CityAdventure[] = [
     landmarks: ['Colosseo', 'Fontana di Trevi', 'Piazza Navona', 'Trastevere'],
     vocabulary: ['caffè', 'pasta', 'gelato', 'piazza', 'storia', 'meraviglioso'],
     scenarios: ['restaurant-dinner', 'cafe-order'],
+    unlockXp: 150,
     xpReward: 150,
   },
   {
@@ -38,6 +40,7 @@ export const CITIES: readonly CityAdventure[] = [
     landmarks: ['Brandenburger Tor', 'Museumsinsel', 'Alexanderplatz', 'Tiergarten'],
     vocabulary: ['U-Bahn', 'Bahnhof', 'Kaffee', 'Museum', 'Technologie', 'Brot'],
     scenarios: ['taxi-directions', 'job-interview'],
+    unlockXp: 300,
     xpReward: 200,
   },
   {
@@ -51,6 +54,7 @@ export const CITIES: readonly CityAdventure[] = [
     landmarks: ['Torre de Belém', 'Alfama', 'Praça do Comércio', 'Miradouro'],
     vocabulary: ['elétrico', 'pastéis de nata', 'miradouro', 'mar', 'fado', 'praia'],
     scenarios: ['supermarket', 'cafe-order'],
+    unlockXp: 150,
     xpReward: 150,
   },
   {
@@ -64,6 +68,7 @@ export const CITIES: readonly CityAdventure[] = [
     landmarks: ['Plaza Mayor', 'Parque del Retiro', 'Gran Vía', 'Museo del Prado'],
     vocabulary: ['tapas', 'metro', 'museo', 'parque', 'terraza', 'amigos'],
     scenarios: ['meet-friend', 'cafe-order'],
+    unlockXp: 0,
     xpReward: 150,
   },
   {
@@ -77,6 +82,7 @@ export const CITIES: readonly CityAdventure[] = [
     landmarks: ['Tour Eiffel', 'Louvre', 'Montmartre', 'Notre-Dame'],
     vocabulary: ['croissant', 'métro', 'boulangerie', 'café', 'art', 'musée'],
     scenarios: ['hotel-reservation', 'cafe-order'],
+    unlockXp: 250,
     xpReward: 180,
   },
   {
@@ -90,6 +96,7 @@ export const CITIES: readonly CityAdventure[] = [
     landmarks: ['Statue of Liberty', 'Central Park', 'Times Square', 'Brooklyn Bridge'],
     vocabulary: ['subway', 'deli', 'avenue', 'skyscraper', 'theater', 'bagel'],
     scenarios: ['cafe-order', 'job-interview'],
+    unlockXp: 500,
     xpReward: 220,
   },
 ];

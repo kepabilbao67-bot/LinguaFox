@@ -1,26 +1,27 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppColors } from '@/constants/app-theme';
+import { getCharacterById } from '@/data/characters';
+import { getCityById } from '@/data/cities';
+import { getScenarioById } from '@/data/scenarios';
 import { useChatHistory } from '@/hooks/use-chat-history';
 import { useProgress } from '@/hooks/use-progress';
-import { fetchTutorReply, INITIAL_TUTOR_SUGGESTIONS } from '@/services/tutor-reply';
 import { fetchCharacterReply } from '@/services/character-reply';
-import { getCharacterById } from '@/data/characters';
-import { getScenarioById } from '@/data/scenarios';
 import { speakText, stopSpeaking } from '@/services/speech';
+import { fetchTutorReply, INITIAL_TUTOR_SUGGESTIONS } from '@/services/tutor-reply';
 import type { ConversationMode, Message, TrackedError } from '@/types/learning';
 
 type SpeechSpeed = 'lenta' | 'normal' | 'rápida';
@@ -33,7 +34,7 @@ export function ChatScreen() {
     initialGreeting?: string;
   }>();
 
-  const { progress, addTrackedError, completeScenario, registerCharacterInteraction } = useProgress();
+  const { progress, addTrackedError, completeScenario, completeCityAdventure, registerCharacterInteraction } = useProgress();
   const { messages, isHydrated, appendMessage, createMessage } = useChatHistory();
 
   const [draft, setDraft] = useState('');
@@ -202,7 +203,18 @@ export function ChatScreen() {
   };
 
   const finishConversation = () => {
-    if (scenario) {
+    if (mode === 'travel' && params.characterId) {
+      // En travel, la ciudad es la misma que characterId mapeado
+      const cityId = params.characterId === 'luca' ? 'roma'
+        : params.characterId === 'sofia' ? 'madrid'
+        : params.characterId === 'hans' ? 'berlin'
+        : params.characterId === 'ana' ? 'lisboa'
+        : 'london';
+      const city = getCityById(cityId);
+      if (city) {
+        completeCityAdventure(cityId, city.xpReward);
+      }
+    } else if (scenario) {
       completeScenario(scenario.id);
     }
     router.push({
