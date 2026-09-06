@@ -56,10 +56,14 @@ export function ChatScreen() {
   });
 
   const scrollViewRef = useRef<ScrollView>(null);
+  const voiceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     return () => {
       stopSpeaking();
+      if (voiceTimeoutRef.current) {
+        clearTimeout(voiceTimeoutRef.current);
+      }
     };
   }, []);
 
@@ -161,7 +165,7 @@ export function ChatScreen() {
 
   const handleVoicePrompt = () => {
     setIsRecording(true);
-    setTimeout(() => {
+    voiceTimeoutRef.current = setTimeout(() => {
       setIsRecording(false);
       const contextualSuggestions: Record<string, string[]> = {
         en: [
@@ -195,6 +199,7 @@ export function ChatScreen() {
       const langList = contextualSuggestions[progress.idiomaObjetivo] ?? contextualSuggestions.en;
       const picked = langList[Math.floor(Math.random() * langList.length)];
       setDraft(picked);
+      voiceTimeoutRef.current = null;
     }, 600);
   };
 
