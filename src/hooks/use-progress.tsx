@@ -6,6 +6,7 @@ import { ACHIEVEMENTS, evaluateAchievements } from '@/data/achievements';
 import { calculateLeagueOutcome, generateWeeklyDivision, getIsoWeekKey } from '@/services/leagues';
 import type { LeagueTier } from '@/types/leagues';
 import type { CEFRLevel, DailyActivityMetrics, LanguageCode, PhonemeProgress, ProgressState, TrackedError } from '@/types/learning';
+import { evaluateCityCompletion } from '@/utils/city-adventure';
 import { DEFAULT_PROGRESS, getGlobalStars, LEGACY_PRONUNCIATION_CHALLENGE_IDS, safeLoadProgress, sanitizeProgress, STORAGE_KEY } from '@/utils/progress-storage';
 import { calculateQuizStars } from '@/utils/rewards';
 import { reviewCard } from '@/utils/srs';
@@ -39,7 +40,7 @@ interface ProgressContextValue {
   incrementSpokenPhrases: () => void;
   unlockCity: (cityId: string) => void;
   completeScenario: (scenarioId: string) => void;
-  completeCityAdventure: (cityId: string) => boolean;
+  completeCityAdventure: (cityId: string) => void;
   claimDailyChallenge: (challengeId: string, xpReward?: number) => void;
   recordCompetencyResult: (
     language: LanguageCode,
@@ -562,44 +563,26 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
     });
   }, []);
 
-  const completeCityAdventure = useCallback((cityId: string): boolean => {
-    // Importar getCityById aquí sería circular. Usamos una lookup simple.
-    // En un mejor diseño, pasaríamos la ciudad entera, pero para mínimo cambio:
-    // validar que la ciudad existe.
-    const VALID_CITY_IDS = ['london', 'madrid', 'roma', 'lisboa', 'paris', 'berlin', 'newyork'];
-    if (!VALID_CITY_IDS.includes(cityId)) {
-      return false; // Ciudad inválida, no otorgar nada
-    }
-
-    let wasCompleted = false;
+  const completeCityAdventure = useCallback((cityId: string): void => {
     setProgress((current) => {
-      const completed = current.completedCities ?? [];
-      if (completed.includes(cityId)) {
-        return current; // Ya completada, sin recompensa
+      const result = evaluateCityCompletion(
+        cityId,
+        current.experiencia,
+        Array.from(current.unlockedCities ?? []),
+        Array.from(current.completedCities ?? [])
+      );
+
+      if (!result.allowed) {
+        return current; // No access, no changes
       }
 
-      // Obtener el reward para esta ciudad (tabla hardcoded mínima aquí para evitar imports circulares)
-      const cityRewards: Record<string, number> = {
-        london: 150,
-        madrid: 150,
-        roma: 150,
-        lisboa: 150,
-        paris: 180,
-        berlin: 200,
-        newyork: 220,
-      };
-      const xpReward = cityRewards[cityId] ?? 0;
-      if (xpReward <= 0) return current;
-
-      wasCompleted = true;
+      // Apply result
       return {
         ...current,
-        completedCities: [...completed, cityId],
-        experiencia: current.experiencia + xpReward,
+        completedCities: result.completedCities,
+        experiencia: current.experiencia + result.xpAwarded,
       };
     });
-
-    return wasCompleted;
   }, []);
 
   const claimDailyChallenge = useCallback((challengeId: string, xpReward: number = 20) => {

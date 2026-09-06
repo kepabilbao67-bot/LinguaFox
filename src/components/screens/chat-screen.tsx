@@ -204,11 +204,7 @@ export function ChatScreen() {
 
   const finishConversation = () => {
     if (mode === 'travel' && params.cityId) {
-      const success = completeCityAdventure(params.cityId);
-      if (!success) {
-        // Ciudad no existe o ya fue completada, proceder sin XP
-        console.warn(`City adventure ${params.cityId} could not be completed.`);
-      }
+      completeCityAdventure(params.cityId);
     } else if (scenario) {
       completeScenario(scenario.id);
     }
