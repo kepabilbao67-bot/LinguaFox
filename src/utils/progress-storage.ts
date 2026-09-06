@@ -8,9 +8,12 @@ import type {
   ProgressState,
   SRSCard,
   TrackedError,
-} from '@/types/learning';
+  WeeklyLeagueState,
+} from '../types/learning';
+import type { LeagueTier } from '../types/leagues';
 import { sumBestStars } from './rewards';
 import { getCalendarOrdinal } from './streak-logic';
+import { getIsoWeekKey } from '../services/leagues';
 
 export const STORAGE_KEY = '@linguafox/progress/v1';
 
@@ -53,6 +56,12 @@ export const DEFAULT_PROGRESS: ProgressState = {
   activityByDate: {},
   competencyStats: {},
   completedPronunciationChallenges: {},
+  weeklyLeague: {
+    tier: 'bronce',
+    weekKey: getIsoWeekKey(),
+    weeklyXp: 0,
+    completedAttempts: {},
+  },
 };
 
 export function getGlobalStars(
@@ -321,6 +330,28 @@ export function sanitizeProgress(raw: unknown): ProgressState {
     activityByDate: sanitizeActivityByDate(value.activityByDate),
     competencyStats: sanitizeCompetencyStats(value.competencyStats),
     completedPronunciationChallenges: sanitizeCompletedPronunciationChallenges(value.completedPronunciationChallenges),
+    weeklyLeague: (() => {
+      const VALID_TIERS = new Set<LeagueTier>(['bronce', 'plata', 'oro', 'zafiro', 'diamante']);
+      if (typeof value.weeklyLeague === 'object' && value.weeklyLeague !== null) {
+        const rawWl = value.weeklyLeague as Partial<WeeklyLeagueState>;
+        const tier: LeagueTier = typeof rawWl.tier === 'string' && VALID_TIERS.has(rawWl.tier as LeagueTier)
+          ? (rawWl.tier as LeagueTier)
+          : 'bronce';
+        const weekKey = typeof rawWl.weekKey === 'string' && /^\d{4}-W\d{2}$/.test(rawWl.weekKey)
+          ? rawWl.weekKey
+          : getIsoWeekKey();
+        const weeklyXp = typeof rawWl.weeklyXp === 'number' && Number.isFinite(rawWl.weeklyXp)
+          ? Math.max(0, Math.floor(rawWl.weeklyXp))
+          : 0;
+        return {
+          tier,
+          weekKey,
+          weeklyXp,
+          completedAttempts: sanitizeNumberRecord(rawWl.completedAttempts),
+        };
+      }
+      return DEFAULT_PROGRESS.weeklyLeague!;
+    })(),
   };
 }
 

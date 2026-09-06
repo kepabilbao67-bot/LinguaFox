@@ -10,14 +10,17 @@ import { useProgress } from '@/hooks/use-progress';
 import type { Lesson, QuizReward } from '@/types/learning';
 import { calculateQuizStars } from '@/utils/rewards';
 import { calculateEducationalScore } from '@/utils/evaluation';
+import { LEAGUE_TIERS, type LeagueTier } from '@/types/leagues';
+import { generateWeeklyDivision, getTierProgression } from '@/services/leagues';
 
 interface ResultScreenProps {
   lesson: Lesson | undefined;
   score: number | undefined;
   total: number | undefined;
+  attemptId?: string;
 }
 
-export function ResultScreen({ lesson, score, total }: ResultScreenProps) {
+export function ResultScreen({ lesson, score, total, attemptId }: ResultScreenProps) {
   const { isHydrated } = useProgress();
   const hasValidResult =
     lesson !== undefined &&
@@ -40,16 +43,17 @@ export function ResultScreen({ lesson, score, total }: ResultScreenProps) {
 
   if (!isHydrated) return <ScreenContainer title="Resultado" isLoading />;
 
-  return <HydratedResult lesson={lesson} score={score} total={total} />;
+  return <HydratedResult lesson={lesson} score={score} total={total} attemptId={attemptId} />;
 }
 
 interface HydratedResultProps {
   lesson: Lesson;
   score: number;
   total: number;
+  attemptId?: string;
 }
 
-function HydratedResult({ lesson, score, total }: HydratedResultProps) {
+function HydratedResult({ lesson, score, total, attemptId }: HydratedResultProps) {
   const { progress, recordQuizResult } = useProgress();
   const [reward] = useState<QuizReward>(() => {
     const attemptStars = calculateQuizStars(score, total);
@@ -77,8 +81,8 @@ function HydratedResult({ lesson, score, total }: HydratedResultProps) {
   const eduScore = calculateEducationalScore(dimensions as any);
 
   useEffect(() => {
-    // El registro es idempotente: solo conserva máximos por lección.
-    recordQuizResult(getProgressKey(lesson.language, lesson.id), score, total);
+    // El registro es idempotente si se provee attemptId: no duplica XP
+    recordQuizResult(getProgressKey(lesson.language, lesson.id), score, total, attemptId);
     
     AccessibilityInfo.isReduceMotionEnabled().then((reduced) => {
       if (reduced) {
@@ -92,10 +96,21 @@ function HydratedResult({ lesson, score, total }: HydratedResultProps) {
         }).start();
       }
     });
-  }, [lesson.id, lesson.language, recordQuizResult, rewardAnimation, score, total]);
+  }, [attemptId, lesson.id, lesson.language, recordQuizResult, rewardAnimation, score, total]);
 
   const verdict =
     score === total ? '¡Perfecto!' : score >= total / 2 ? 'Bien, sigue así' : 'Repasa la lección';
+
+  const currentTier: LeagueTier = progress.weeklyLeague?.tier ?? 'bronce';
+  const currentWeeklyXp = progress.weeklyLeague?.weeklyXp ?? 0;
+  const tierConfig = LEAGUE_TIERS[currentTier];
+  const division = generateWeeklyDivision(currentTier, currentWeeklyXp);
+  const userRank = division.userRank;
+  const xpEarnedThisQuiz = 10 + (score === total ? 15 : 0);
+  const isPromoting = userRank <= tierConfig.promotionCutoff;
+  const nextTier = getTierProgression(currentTier, 'ascenso');
+  const targetXp = division.participants[tierConfig.promotionCutoff - 1]?.xp ?? 0;
+  const xpToPromotion = Math.max(1, targetXp - currentWeeklyXp + 5);
 
   return (
     <ScreenContainer title="Resultado">
@@ -142,6 +157,34 @@ function HydratedResult({ lesson, score, total }: HydratedResultProps) {
           </Text>
         </Animated.View>
 
+        {/* Peak-End: League Progression Feedback */}
+        <View style={styles.leagueBox}>
+          <View style={styles.leagueHeader}>
+            <Text style={styles.leagueBadge}>{tierConfig.badge}</Text>
+            <View style={styles.leagueHeaderText}>
+              <Text style={styles.leagueTierName}>{tierConfig.name}</Text>
+              <Text style={styles.leagueSubText}>
+                Puesto #{userRank} de 30 · +{xpEarnedThisQuiz} XP en liga semanal
+              </Text>
+            </View>
+          </View>
+          <View style={[styles.leagueStatusPill, isPromoting ? styles.pillSuccess : styles.pillNeutral]}>
+            <Text style={[styles.leagueStatusText, isPromoting ? styles.statusSuccessText : styles.statusNeutralText]}>
+              {isPromoting
+                ? `🚀 ¡Estás en Zona de Ascenso a ${LEAGUE_TIERS[nextTier].name}!`
+                : `⚡ A ${xpToPromotion} XP de la Zona de Ascenso (Top ${tierConfig.promotionCutoff})`}
+            </Text>
+          </View>
+          <Pressable
+            style={({ pressed }) => [styles.viewLeagueButton, pressed && styles.pressed]}
+            onPress={() => router.push('/leaderboard')}
+            accessibilityRole="button"
+            accessibilityLabel={`Ver clasificación completa de ${tierConfig.name}. Actualmente en puesto ${userRank}.`}
+          >
+            <Text style={styles.viewLeagueButtonText}>Ver Clasificación de Liga ➔</Text>
+          </Pressable>
+        </View>
+
         <Pressable style={styles.button} onPress={() => router.replace(`/quiz/${lesson.id}`)}>
           <Text style={styles.buttonText}>Repetir quiz</Text>
         </Pressable>
@@ -179,7 +222,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   rewardStars: { color: AppColors.accent, fontSize: 29, letterSpacing: 3 },
   rewardTitle: { color: AppColors.text, fontSize: 17, fontWeight: '800', marginTop: 8 },
@@ -189,14 +232,91 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontVariant: ['tabular-nums'],
   },
+  leagueBox: {
+    width: '100%',
+    backgroundColor: AppColors.surfaceRaised,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: AppColors.surfaceBorder,
+    gap: 10,
+  },
+  leagueHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  leagueBadge: {
+    fontSize: 28,
+  },
+  leagueHeaderText: {
+    flex: 1,
+  },
+  leagueTierName: {
+    color: AppColors.text,
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  leagueSubText: {
+    color: AppColors.textMuted,
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  leagueStatusPill: {
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  pillSuccess: {
+    backgroundColor: 'rgba(34, 197, 94, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(34, 197, 94, 0.3)',
+  },
+  pillNeutral: {
+    backgroundColor: 'rgba(59, 130, 246, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.25)',
+  },
+  leagueStatusText: {
+    fontSize: 13,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  statusSuccessText: {
+    color: AppColors.success,
+  },
+  statusNeutralText: {
+    color: AppColors.primaryBright,
+  },
+  viewLeagueButton: {
+    minHeight: 48,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: AppColors.surfaceBorder,
+  },
+  viewLeagueButtonText: {
+    color: AppColors.primaryBright,
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  pressed: {
+    opacity: 0.8,
+  },
   button: {
     width: '100%',
+    minHeight: 48,
     backgroundColor: AppColors.primary,
     borderRadius: 12,
     alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 14,
   },
   buttonText: { color: AppColors.text, fontWeight: '800' },
-  homeButton: { paddingVertical: 16 },
+  homeButton: { paddingVertical: 16, minHeight: 48, justifyContent: 'center' },
   homeText: { color: AppColors.textMuted, fontWeight: '600' },
 });

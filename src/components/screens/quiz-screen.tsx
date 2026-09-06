@@ -48,6 +48,7 @@ export function QuizScreen({ lesson }: QuizScreenProps) {
         lessonId: lesson.id,
         score: String(quiz.score),
         total: String(quiz.questions.length),
+        attemptId: `${lesson.id}_${Date.now()}`,
       },
     });
   }, [lesson, quiz.isFinished, quiz.questions.length, quiz.score]);

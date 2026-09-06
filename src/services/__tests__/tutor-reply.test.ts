@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { fetchTutorReply, INITIAL_TUTOR_SUGGESTIONS, createPedagogicalCorrection } from '../tutor-reply';
+import {
+  fetchTutorReply,
+  INITIAL_TUTOR_SUGGESTIONS,
+  createPedagogicalCorrection,
+  createFullPedagogicalCorrection,
+} from '../tutor-reply';
 
 beforeEach(() => {
   globalThis.fetch = vi.fn() as any;
@@ -98,7 +103,7 @@ describe('fetchTutorReply (Local)', () => {
     expect(deResult?.text).toContain('Gern geschehen!');
   });
 
-  describe('Pedagogical Rules Integrity (11 Rules)', () => {
+  describe('Pedagogical Rules Integrity (18 Rules)', () => {
     const cases = [
       { input: 'i goed to school', expectedSub: 'I went', cat: 'verb-tense' },
       { input: 'i am agree with you', expectedSub: 'I agree', cat: 'grammar' },
@@ -111,10 +116,17 @@ describe('fetchTutorReply (Local)', () => {
       { input: 'the people is nice', expectedSub: 'people are', cat: 'grammar' },
       { input: 'please explain me the rule', expectedSub: 'explain to me', cat: 'preposition' },
       { input: 'i prefer tea than coffee', expectedSub: 'prefer tea to coffee', cat: 'grammar' },
+      { input: 'i do a mistake', expectedSub: 'make a mistake', cat: 'vocabulary' },
+      { input: 'we arrive to london', expectedSub: 'arrive in london', cat: 'preposition' },
+      { input: 'we arrive to the airport', expectedSub: 'arrive at the airport', cat: 'preposition' },
+      { input: 'i live here since 3 years', expectedSub: 'for 3 years', cat: 'grammar' },
+      { input: 'i lose the bus', expectedSub: 'miss the bus', cat: 'vocabulary' },
+      { input: 'i look forward to hear from you', expectedSub: 'look forward to hearing', cat: 'grammar' },
+      { input: 'she gave me many informations', expectedSub: 'a lot of information', cat: 'vocabulary' },
     ];
 
     cases.forEach(({ input, expectedSub, cat }) => {
-      it(`verifica regla para: "${input}"`, () => {
+      it(`verifica regla pedagógica para: "${input}"`, () => {
         const corr = createPedagogicalCorrection(input);
         expect(corr).toBeDefined();
         expect(corr?.correctedText).toContain(expectedSub);
@@ -125,7 +137,33 @@ describe('fetchTutorReply (Local)', () => {
         expect(corr?.example?.length).toBeGreaterThan(0);
         expect(corr?.explanation).toBeTypeOf('string');
         expect(corr?.explanation?.length).toBeGreaterThan(0);
+        expect(corr?.why).toBeTypeOf('string');
+        expect(corr?.how).toBeTypeOf('string');
+        expect(corr?.when).toBeTypeOf('string');
       });
+    });
+  });
+
+  describe('createFullPedagogicalCorrection (Pedagogical Bridge)', () => {
+    it('genera un objeto PedagogicalCorrection compatible con ErrorExplanationCard', () => {
+      const fullCorr = createFullPedagogicalCorrection('i do a mistake in the exam');
+      expect(fullCorr).toBeDefined();
+      expect(fullCorr?.errorDetectado).toBe('i do a mistake in the exam');
+      expect(fullCorr?.correccion).toContain('make a mistake');
+      expect(fullCorr?.tipoError).toBe('vocabulario');
+      expect(fullCorr?.explicacionPorQue).toContain('Make');
+      expect(fullCorr?.explicacionComo).toBeTypeOf('string');
+      expect(fullCorr?.explicacionCuando).toBeTypeOf('string');
+      expect(fullCorr?.ejemplos.length).toBeGreaterThan(0);
+      expect(fullCorr?.ejercicioComprobacion).toBeTypeOf('string');
+      expect(fullCorr?.confianza).toBe('high');
+      expect(fullCorr?.gravedad).toBe('menor');
+      expect(fullCorr?.textoParaVoz).toContain('Forma correcta:');
+    });
+
+    it('devuelve undefined si la frase no tiene errores detectados', () => {
+      const fullCorr = createFullPedagogicalCorrection('Good morning, I am practicing today.');
+      expect(fullCorr).toBeUndefined();
     });
   });
 });

@@ -2,6 +2,7 @@ import type { LanguageCode, ProgressState } from '@/types/learning';
 import { calculateQuizStars } from './rewards';
 import { calculateNewStreak } from './streak-logic';
 import { DEFAULT_PROGRESS, getGlobalStars, STORAGE_KEY, safeLoadProgress, sanitizeProgress } from './progress-storage';
+import { getIsoWeekKey } from '../services/leagues';
 
 export class ProgressManager {
   private _progress: ProgressState;
@@ -54,8 +55,10 @@ export class ProgressManager {
     };
   }
 
-  recordQuizResult(lessonId: string, score: number, total: number, now: number) {
+  recordQuizResult(lessonId: string, score: number, total: number, now: number, attemptId?: string) {
     if (!lessonId || !Number.isInteger(score) || !Number.isInteger(total) || total <= 0 || score < 0 || score > total) return;
+    if (attemptId && this._progress.weeklyLeague?.completedAttempts?.[attemptId]) return;
+
     const attemptStars = calculateQuizStars(score, total);
     const previousBestScore = this._progress.mejorPuntuacionPorLeccion[lessonId] ?? 0;
     const previousBestStars = this._progress.mejoresEstrellasPorLeccion[lessonId] ?? 0;
@@ -63,11 +66,27 @@ export class ProgressManager {
       ...this._progress.mejoresEstrellasPorLeccion,
       [lessonId]: Math.max(previousBestStars, attemptStars),
     };
+    const xpEarned = 10 + (score === total ? 15 : 0);
+    const currentWeekKey = getIsoWeekKey(new Date(now));
+    const isSameWeek = this._progress.weeklyLeague?.weekKey === currentWeekKey;
+    const weeklyXp = (isSameWeek ? (this._progress.weeklyLeague?.weeklyXp ?? 0) : 0) + xpEarned;
+    const tier = this._progress.weeklyLeague?.tier ?? 'bronce';
+
+    const completedAttempts = {
+      ...(this._progress.weeklyLeague?.completedAttempts ?? {}),
+      ...(attemptId ? { [attemptId]: now } : {}),
+    };
 
     this._progress = {
       ...this._progress,
       ...calculateNewStreak(this._progress, now),
-      experiencia: this._progress.experiencia + 10 + (score === total ? 15 : 0),
+      experiencia: this._progress.experiencia + xpEarned,
+      weeklyLeague: {
+        tier,
+        weekKey: currentWeekKey,
+        weeklyXp,
+        completedAttempts,
+      },
       leccionesCompletadas: this._progress.leccionesCompletadas.includes(lessonId)
         ? this._progress.leccionesCompletadas
         : [...this._progress.leccionesCompletadas, lessonId],

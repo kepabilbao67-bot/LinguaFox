@@ -12,6 +12,8 @@ import { ACHIEVEMENTS } from '@/data/achievements';
 import { getCityForLanguage } from '@/data/cities';
 import { getDailyChallenges, type DailyChallenge } from '@/utils/daily-challenges';
 import type { CEFRLevel } from '@/types/learning';
+import { LEAGUE_TIERS, type LeagueTier } from '@/types/leagues';
+import { generateWeeklyDivision } from '@/services/leagues';
 
 const ALL_CEFR_LEVELS: readonly CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 
@@ -77,6 +79,19 @@ export function HomeScreen() {
   // Daily Challenges
   const dailyChallenges: readonly DailyChallenge[] = useMemo(() => getDailyChallenges(progress), [progress]);
   const claimedCount = dailyChallenges.filter((c) => c.claimed).length;
+
+  // Weekly League Progression
+  const currentTier: LeagueTier = progress.weeklyLeague?.tier ?? 'bronce';
+  const userWeeklyXp = progress.weeklyLeague?.weeklyXp ?? 0;
+  const tierConfig = LEAGUE_TIERS[currentTier];
+  const division = useMemo(() => {
+    return generateWeeklyDivision(currentTier, userWeeklyXp);
+  }, [currentTier, userWeeklyXp]);
+  const userRank = division.userRank;
+  const isPromoting = userRank <= tierConfig.promotionCutoff;
+  const isDemoting = currentTier !== 'bronce' && userRank >= tierConfig.demotionCutoff;
+  const targetPromotionXp = division.participants[tierConfig.promotionCutoff - 1]?.xp ?? 0;
+  const xpNeededForPromotion = Math.max(1, targetPromotionXp - userWeeklyXp + 5);
 
   return (
     <ScreenContainer title="LinguaFox" isLoading={!isHydrated} scrollable={false}>
@@ -206,6 +221,54 @@ export function HomeScreen() {
           </View>
         </View>
 
+        {/* Weekly League Summary Card */}
+        <Pressable
+          style={({ pressed }) => [styles.leagueCard, pressed && styles.pressed]}
+          onPress={() => router.push('/leaderboard')}
+          accessibilityRole="button"
+          accessibilityLabel={`${tierConfig.name}. Puesto ${userRank} de 30. ${userWeeklyXp} puntos esta semana. Pulsa para ver la clasificación completa.`}
+        >
+          <View style={styles.leagueCardLeft}>
+            <View style={[styles.leagueIconCircle, { backgroundColor: `${tierConfig.color}20` }]}>
+              <Text style={styles.leagueCardIcon}>{tierConfig.badge}</Text>
+            </View>
+            <View style={styles.leagueCardInfo}>
+              <View style={styles.leagueCardTitleRow}>
+                <Text style={styles.leagueCardTitle}>{tierConfig.name}</Text>
+                <View
+                  style={[
+                    styles.leagueRankBadge,
+                    isPromoting
+                      ? styles.rankBadgeSuccess
+                      : isDemoting
+                        ? styles.rankBadgeDanger
+                        : styles.rankBadgeNeutral,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.leagueRankText,
+                      isPromoting
+                        ? styles.rankTextSuccess
+                        : isDemoting
+                          ? styles.rankTextDanger
+                          : styles.rankTextNeutral,
+                    ]}
+                  >
+                    #{userRank}
+                  </Text>
+                </View>
+              </View>
+              <Text style={styles.leagueCardSubtitle}>
+                {isPromoting
+                  ? `🚀 En zona de ascenso · ${userWeeklyXp} XP`
+                  : `⚡ A ${xpNeededForPromotion} XP del ascenso · ${userWeeklyXp} XP`}
+              </Text>
+            </View>
+          </View>
+          <Text style={styles.leagueCardArrow}>➔</Text>
+        </Pressable>
+
         {/* Live Conversation Hero CTA */}
         <Pressable
           style={({ pressed }) => [styles.heroCtaCard, pressed && styles.pressed]}
@@ -323,6 +386,16 @@ export function HomeScreen() {
             <Text style={styles.hubCardIcon}>🏆</Text>
             <Text style={styles.hubCardTitle}>Logros</Text>
             <Text style={styles.hubCardDesc}>Trofeos e insignias</Text>
+          </Pressable>
+
+          {/* Ligas Semanales */}
+          <Pressable
+            style={({ pressed }) => [styles.hubCard, pressed && styles.pressed]}
+            onPress={() => router.push('/leaderboard')}
+          >
+            <Text style={styles.hubCardIcon}>{tierConfig.badge}</Text>
+            <Text style={styles.hubCardTitle}>Liga Semanal</Text>
+            <Text style={styles.hubCardDesc}>#{userRank} · {userWeeklyXp} XP</Text>
           </Pressable>
 
           {/* Modo Kids */}
@@ -763,6 +836,84 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.surfaceBorder,
     },
     pathQuizButtonText: { color: colors.textMuted, fontSize: 13, fontWeight: '700' },
+    leagueCard: {
+      backgroundColor: colors.surfaceRaised,
+      borderRadius: 18,
+      padding: 14,
+      borderWidth: 1,
+      borderColor: colors.surfaceBorder,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      minHeight: 64, // Comfortable touch target
+    },
+    leagueCardLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      flex: 1,
+    },
+    leagueIconCircle: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    leagueCardIcon: {
+      fontSize: 24,
+    },
+    leagueCardInfo: {
+      flex: 1,
+      gap: 2,
+    },
+    leagueCardTitleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    leagueCardTitle: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '800',
+    },
+    leagueRankBadge: {
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 8,
+    },
+    rankBadgeSuccess: {
+      backgroundColor: 'rgba(34, 197, 94, 0.2)',
+    },
+    rankBadgeDanger: {
+      backgroundColor: 'rgba(239, 68, 68, 0.2)',
+    },
+    rankBadgeNeutral: {
+      backgroundColor: 'rgba(59, 130, 246, 0.15)',
+    },
+    leagueRankText: {
+      fontSize: 12,
+      fontWeight: '900',
+    },
+    rankTextSuccess: {
+      color: AppColors.success,
+    },
+    rankTextDanger: {
+      color: AppColors.danger,
+    },
+    rankTextNeutral: {
+      color: AppColors.primaryBright,
+    },
+    leagueCardSubtitle: {
+      color: colors.textMuted,
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    leagueCardArrow: {
+      color: colors.textMuted,
+      fontSize: 16,
+      marginLeft: 8,
+    },
     pressed: { opacity: 0.8 },
   });
 }

@@ -1,6 +1,15 @@
+import type { LeagueTier } from './leagues';
+
 export type LanguageCode = 'en' | 'es' | 'fr' | 'it' | 'de' | 'pt' | 'eu' | 'ca';
 
 export type CEFRLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+
+export interface WeeklyLeagueState {
+  tier: LeagueTier;
+  weekKey: string;
+  weeklyXp: number;
+  completedAttempts?: Record<string, number>;
+}
 
 export type Screen = 'home' | 'lesson' | 'quiz' | 'result';
 
@@ -241,6 +250,7 @@ export interface ProgressState {
   activityByDate?: Record<string, DailyActivityMetrics>;
   competencyStats?: Record<string, CompetencyStatsByLevel>;
   completedPronunciationChallenges?: Record<string, string>;
+  weeklyLeague?: WeeklyLeagueState;
 }
 
 export interface QuizReward {
@@ -258,6 +268,11 @@ export interface ChatCorrection {
   category?: 'grammar' | 'vocabulary' | 'preposition' | 'verb-tense' | 'pronunciation';
   rule?: string;
   example?: string;
+  why?: string;
+  how?: string;
+  when?: string;
+  whenNot?: string;
+  checkExercise?: string;
 }
 
 export interface Message {

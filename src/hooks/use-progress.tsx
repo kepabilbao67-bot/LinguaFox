@@ -3,6 +3,8 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import * as SplashScreen from 'expo-splash-screen';
 
 import type { CEFRLevel, DailyActivityMetrics, LanguageCode, ProgressState, TrackedError } from '@/types/learning';
+import type { LeagueTier } from '@/types/leagues';
+import { getIsoWeekKey, generateWeeklyDivision, calculateLeagueOutcome } from '@/services/leagues';
 import { calculateQuizStars } from '@/utils/rewards';
 import { ACHIEVEMENTS, evaluateAchievements } from '@/data/achievements';
 import { calculateNewStreak, getLocalDateKey } from '@/utils/streak-logic';
@@ -18,7 +20,7 @@ interface ProgressContextValue {
   progress: ProgressState;
   isHydrated: boolean;
   setLessonProgress: (lessonId: string, cardIndex: number) => void;
-  recordQuizResult: (lessonId: string, score: number, total: number) => void;
+  recordQuizResult: (lessonId: string, score: number, total: number, attemptId?: string) => void;
   registerCharacterInteraction: (characterId: string, type: 'chat' | 'call') => void;
   setLanguages: (nativo: LanguageCode, objetivo: LanguageCode) => void;
   resetProgress: () => void;
@@ -190,7 +192,7 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
     }));
   }, []);
 
-  const recordQuizResult = useCallback((lessonId: string, score: number, total: number) => {
+  const recordQuizResult = useCallback((lessonId: string, score: number, total: number, attemptId?: string) => {
     if (
       !lessonId ||
       !Number.isInteger(score) ||
@@ -203,6 +205,11 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
     }
 
     setProgress((current) => {
+      // Idempotency: protect against re-opening screen or repeating with the same attemptId
+      if (attemptId && current.weeklyLeague?.completedAttempts?.[attemptId]) {
+        return current;
+      }
+
       const attemptStars = calculateQuizStars(score, total);
       const previousBestScore = current.mejorPuntuacionPorLeccion[lessonId] ?? 0;
       const previousBestStars = current.mejoresEstrellasPorLeccion[lessonId] ?? 0;
@@ -211,11 +218,40 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
         [lessonId]: Math.max(previousBestStars, attemptStars),
       };
       const todayKey = getLocalDateKey();
+      const xpEarned = 10 + (score === total ? 15 : 0);
+
+      // Weekly league progression & rollover logic
+      const currentWeekKey = getIsoWeekKey();
+      let activeTier: LeagueTier = current.weeklyLeague?.tier ?? 'bronce';
+      let activeWeeklyXp = current.weeklyLeague?.weeklyXp ?? 0;
+      let bonusCoins = 0;
+
+      if (current.weeklyLeague && current.weeklyLeague.weekKey !== currentWeekKey) {
+        const prevDiv = generateWeeklyDivision(activeTier, activeWeeklyXp);
+        const outcome = calculateLeagueOutcome(prevDiv);
+        activeTier = outcome.nextTier;
+        activeWeeklyXp = xpEarned;
+        bonusCoins = outcome.rewardCoins;
+      } else {
+        activeWeeklyXp += xpEarned;
+      }
+
+      const completedAttempts = {
+        ...(current.weeklyLeague?.completedAttempts ?? {}),
+        ...(attemptId ? { [attemptId]: Date.now() } : {}),
+      };
 
       return {
         ...current,
         ...calculateNewStreak(current, Date.now()),
-        experiencia: current.experiencia + 10 + (score === total ? 15 : 0),
+        experiencia: current.experiencia + xpEarned,
+        coins: current.coins + bonusCoins,
+        weeklyLeague: {
+          tier: activeTier,
+          weekKey: currentWeekKey,
+          weeklyXp: activeWeeklyXp,
+          completedAttempts,
+        },
         leccionesCompletadas: current.leccionesCompletadas.includes(lessonId)
           ? current.leccionesCompletadas
           : [...current.leccionesCompletadas, lessonId],
@@ -283,11 +319,24 @@ export function ProgressProvider({ children }: React.PropsWithChildren) {
 
   const addExperience = useCallback((xp: number) => {
     if (xp <= 0) return;
-    setProgress((current) => ({
-      ...current,
-      ...calculateNewStreak(current, Date.now()),
-      experiencia: current.experiencia + xp,
-    }));
+    const currentWeekKey = getIsoWeekKey();
+    setProgress((current) => {
+      const activeTier: LeagueTier = current.weeklyLeague?.tier ?? 'bronce';
+      const isSameWeek = current.weeklyLeague?.weekKey === currentWeekKey;
+      const weeklyXp = (isSameWeek ? (current.weeklyLeague?.weeklyXp ?? 0) : 0) + xp;
+
+      return {
+        ...current,
+        ...calculateNewStreak(current, Date.now()),
+        experiencia: current.experiencia + xp,
+        weeklyLeague: {
+          tier: activeTier,
+          weekKey: currentWeekKey,
+          weeklyXp,
+          completedAttempts: current.weeklyLeague?.completedAttempts ?? {},
+        },
+      };
+    });
   }, []);
 
   const recordSpeakingPractice = useCallback(() => {

@@ -1,8 +1,9 @@
-import type { ChatCorrection, TutorReply } from '@/types/learning';
+import type { ChatCorrection, TutorReply } from '../types/learning';
+import type { PedagogicalCorrection } from '../types/pedagogical-correction';
 
 export const INITIAL_TUTOR_SUGGESTIONS: readonly string[] = [
   'Hello! How are you?',
-  'My name is…',
+  'My name is...',
   'I want to practice English.',
 ];
 
@@ -15,96 +16,237 @@ interface CorrectionRule {
   category?: 'grammar' | 'vocabulary' | 'preposition' | 'verb-tense' | 'pronunciation';
   rule?: string;
   example?: string;
+  why?: string;
+  how?: string;
+  when?: string;
+  whenNot?: string;
+  checkExercise?: string;
 }
 
 const CORRECTION_RULES: readonly CorrectionRule[] = [
   {
     pattern: /\bi goed\b/i,
     replacement: 'I went',
-    explanation: '“Go” is irregular in the past: go → went. / “Go” es irregular en pasado.',
+    explanation: '"Go" is irregular in the past: go -> went. / "Go" es irregular en pasado.',
     category: 'verb-tense',
     rule: 'Past irregular forms',
     example: 'I went to the store yesterday.',
+    why: 'El verbo "go" no sigue la regla regular "-ed"; tiene su propia forma irregular "went" para el pasado simple.',
+    how: 'Usa "went" para cualquier sujeto en pasado simple: I went, you went, she went.',
+    when: 'Al relatar eventos finalizados en un momento específico del pasado.',
+    whenNot: 'No uses "goed" nunca; tampoco uses "went" tras auxiliares como "did" (ej. "Did you go?", no "Did you went?").',
+    checkExercise: 'Completa: Yesterday, she ____ (go) to the library.',
   },
   {
     pattern: /\bi am agree\b/i,
     replacement: 'I agree',
-    explanation: 'We say “I agree”, without “am”. / Decimos “I agree”, sin “am”.',
+    explanation: 'We say "I agree", without "am". / Decimos "I agree", sin "am".',
     category: 'grammar',
     rule: 'Stative verbs',
     example: 'I agree with your proposal.',
+    why: 'En inglés, "agree" es un verbo de estado, no un adjetivo. No requiere el verbo auxiliar "to be".',
+    how: 'Conjuga directamente: "I agree", "she agrees", "they agree".',
+    when: 'Para expresar conformidad con una opinión o propuesta.',
+    whenNot: 'No digas "I am agree" ni "I am agreeing" para estados permanentes de opinión.',
+    checkExercise: 'Corrige la frase: "I am totally agree with that idea."',
   },
   {
     pattern: /\bi have (\d+) years\b/i,
     replacement: (_match, age) => `I am ${age} years old`,
-    explanation: 'For age, English uses “I am … years old”. / Para la edad usamos “I am”.',
+    explanation: 'For age, English uses "I am ... years old". / Para la edad usamos "I am".',
     category: 'grammar',
     rule: 'Age expression with "to be"',
     example: 'I am 25 years old.',
+    why: 'En inglés la edad se considera un estado del ser ("to be"), no una posesión ("to have").',
+    how: 'Usa la estructura: sujeto + to be + número + (years old opcional).',
+    when: 'Al presentarte o decir la edad de personas, animales u objetos.',
+    whenNot: 'No uses "I have ... years" por traducción literal del español.',
+    checkExercise: 'Traduce: "Mi hermano tiene 18 años."',
   },
   {
     pattern: /\bi no understand\b/i,
     replacement: "I don't understand",
-    explanation: 'Use “don’t” to make a negative sentence. / Usa “don’t” para negar.',
+    explanation: 'Use "don\'t" to make a negative sentence. / Usa "don\'t" para negar.',
     category: 'grammar',
     rule: 'Negative auxiliary with do/does',
     example: "I don't understand this word.",
+    why: 'Los verbos léxicos en presente simple necesitan el auxiliar "do not" (don\'t) para formar la negación.',
+    how: 'Sujeto + don\'t / doesn\'t + verbo en infinitivo sin "to".',
+    when: 'Al negar acciones o estados habituales en presente simple.',
+    whenNot: 'No coloques "no" directamente antes de un verbo principal.',
+    checkExercise: 'Transforma a negativo: "I speak French."',
   },
   {
     pattern: /\bshe have\b/i,
     replacement: 'She has',
-    explanation: 'With “she”, “have” changes to “has”. / Con “she”, “have” cambia a “has”.',
+    explanation: 'With "she", "have" changes to "has". / Con "she", "have" cambia a "has".',
     category: 'grammar',
     rule: 'Third person singular',
     example: 'She has a blue umbrella.',
+    why: 'La tercera persona del singular (he, she, it) requiere la forma irregular "has" en presente simple afirmativo.',
+    how: 'He/She/It + has + sustantivo / participio.',
+    when: 'Al describir posesiones o características de una tercera persona.',
+    whenNot: 'En oraciones negativas o preguntas con "does", el verbo vuelve a "have": "Does she have a car?".',
+    checkExercise: 'Elige: She (have / has) three meetings today.',
   },
   {
     pattern: /\bhe have\b/i,
     replacement: 'He has',
-    explanation: 'With “he”, “have” changes to “has”. / Con “he”, “have” cambia a “has”.',
+    explanation: 'With "he", "have" changes to "has". / Con "he", "have" cambia a "has".',
     category: 'grammar',
     rule: 'Third person singular',
     example: 'He has an appointment today.',
+    why: 'Con "he", el verbo tener en presente adopta la forma "has".',
+    how: 'He + has.',
+    when: 'Al hablar de un sujeto masculino singular.',
+    whenNot: 'No uses "have" en afirmativas de presente con "he".',
+    checkExercise: 'Completa: He ____ (have) a new apartment.',
   },
   {
     pattern: /\bdepend of\b/i,
     replacement: 'depend on',
-    explanation: 'We say “depend on”, not “depend of”. / En inglés se usa “depend on”.',
+    explanation: 'We say "depend on", not "depend of". / En inglés se usa "depend on".',
     category: 'preposition',
     rule: 'Dependent prepositions',
     example: 'It will depend on the weather.',
+    why: 'El verbo "depend" rige obligatoriamente la preposición "on" (o formalmente "upon"), nunca "of".',
+    how: 'Usa "depend on + objeto/pronombre/cláusula".',
+    when: 'Al indicar que algo está sujeto a una condición.',
+    whenNot: 'No traduzcas literalmente "depender de" como "depend of".',
+    checkExercise: 'Corrige: "Our success depends of our daily practice."',
   },
   {
     pattern: /\blisten music\b/i,
     replacement: 'listen to music',
-    explanation: 'The verb “listen” requires “to”: “listen to music”. / El verbo “listen” lleva la preposición “to”.',
+    explanation: 'The verb "listen" requires "to": "listen to music". / El verbo "listen" lleva la preposición "to".',
     category: 'preposition',
     rule: 'Dependent prepositions',
     example: 'I like to listen to music while running.',
+    why: 'Cuando "listen" tiene un objeto directo, requiere la preposición "to" para dirigir la atención auditiva.',
+    how: 'Usa "listen to + objeto" (listen to music, listen to me, listen to the teacher).',
+    when: 'Siempre que menciones lo que estás escuchando conscientemente.',
+    whenNot: 'Si no hay objeto, "to" se omite: "Listen carefully!". Tampoco confundas con "hear" (hear music sin "to").',
+    checkExercise: 'Completa: Please listen ____ the instructions.',
   },
   {
     pattern: /\bpeople is\b/i,
     replacement: 'people are',
-    explanation: '“People” is plural in English: “people are”. / “People” es un sustantivo plural.',
+    explanation: '"People" is plural in English: "people are". / "People" es un sustantivo plural.',
     category: 'grammar',
     rule: 'Collective plural nouns',
     example: 'The people are very friendly here.',
+    why: 'En inglés, "people" es el plural habitual de "person" y concuerda siempre en plural.',
+    how: 'People + verbo en plural (are, have, were, like).',
+    when: 'Al referirte a grupos de personas o habitantes.',
+    whenNot: 'No uses "people is", salvo en el sentido antropológico especializado de "un pueblo/nación" ("a people").',
+    checkExercise: 'Corrige: "Many people is waiting outside."',
   },
   {
     pattern: /\bexplain me\b/i,
     replacement: 'explain to me',
-    explanation: 'In English we say “explain to me”, not “explain me”. / Decimos “explain to me”.',
+    explanation: 'In English we say "explain to me", not "explain me". / Decimos "explain to me".',
     category: 'preposition',
     rule: 'Ditransitive verbs',
     example: 'Can you explain to me how this works?',
+    why: 'El verbo "explain" no admite doble objeto directo; la persona a quien se explica requiere la preposición "to".',
+    how: 'Explain + algo + TO alguien (o "explain to me + cláusula").',
+    when: 'Al pedir o describir explicaciones.',
+    whenNot: 'No digas "explain me the problem"; di "explain the problem to me".',
+    checkExercise: 'Ordena: can / to me / the rules / you / explain ?',
   },
   {
     pattern: /\bprefer ([a-z]+) than ([a-z]+)\b/i,
     replacement: (_match, item1, item2) => `prefer ${item1} to ${item2}`,
-    explanation: 'We say “prefer X to Y”, not “than”. / Decimos “prefer to”, no “prefer than”.',
+    explanation: 'We say "prefer X to Y", not "than". / Decimos "prefer to", no "prefer than".',
     category: 'grammar',
     rule: 'Comparative preferences',
     example: 'I prefer tea to coffee.',
+    why: 'El verbo "prefer" compara dos sustantivos o gerundios mediante la preposición "to", no con la conjunción "than".',
+    how: 'Prefer + A + to + B (ej. "I prefer walking to driving").',
+    when: 'Al comparar dos preferencias generales.',
+    whenNot: '"Than" se usa con "would rather": "I would rather walk than drive".',
+    checkExercise: 'Corrige: "I prefer reading than watching TV."',
+  },
+  {
+    pattern: /\bdo a mistake\b/i,
+    replacement: 'make a mistake',
+    explanation: 'We say "make a mistake", not "do a mistake". / Decimos "make a mistake".',
+    category: 'vocabulary',
+    rule: 'Collocations with Make vs Do',
+    example: 'Everyone makes mistakes when learning a new language.',
+    why: '"Make" se asocia con crear o producir resultados, mientras que "do" se asocia con tareas o acciones generales.',
+    how: 'Usa siempre la colocación fija: "make a mistake / make an error".',
+    when: 'Al cometer un fallo o equivocación.',
+    whenNot: 'No uses "do" con "mistake", "decision", "progress" o "effort".',
+    checkExercise: 'Elige: Did you (do / make) any mistakes in the test?',
+  },
+  {
+    pattern: /\barrive to (london|paris|rome|berlin|madrid|the airport|the station|the hotel)\b/i,
+    replacement: (_match, destination) => {
+      const isLargeCity = ['london', 'paris', 'rome', 'berlin', 'madrid'].includes(destination.toLowerCase());
+      return `arrive ${isLargeCity ? 'in' : 'at'} ${destination}`;
+    },
+    explanation: 'Use "arrive in" for cities/countries and "arrive at" for specific places, not "arrive to".',
+    category: 'preposition',
+    rule: 'Prepositions of arrival',
+    example: 'We arrived in London at 8 PM, then arrived at the hotel.',
+    why: 'El verbo "arrive" no indica movimiento en dirección (a diferencia de "go to"), sino el hecho de estar dentro o en el lugar.',
+    how: 'Arrive IN + ciudades/países; Arrive AT + edificios/estaciones/lugares concretos.',
+    when: 'Al describir la llegada a un destino.',
+    whenNot: 'Nunca uses "arrive to".',
+    checkExercise: 'Completa: What time will we arrive ____ Madrid?',
+  },
+  {
+    pattern: /\bsince (\d+|two|three|four|five|six|several) (days|weeks|months|years)\b/i,
+    replacement: (_match, num, unit) => `for ${num} ${unit}`,
+    explanation: 'Use "for" with a duration/period of time, and "since" with a specific starting point.',
+    category: 'grammar',
+    rule: 'For vs Since in perfect tenses',
+    example: 'I have lived here for 3 years, since 2021.',
+    why: '"For" mide la duración total de un periodo (for 3 years), mientras que "since" marca el punto de origen (since Monday, since 2020).',
+    how: 'For + periodo de tiempo; Since + punto específico en el tiempo.',
+    when: 'Al expresar la duración de una acción continuada con el Present Perfect.',
+    whenNot: 'No uses "since" con cantidades de tiempo transcurridas ("since 2 months" es incorrecto).',
+    checkExercise: 'Elige: I have studied English (for / since) six months.',
+  },
+  {
+    pattern: /\blose the (bus|train|flight|plane)\b/i,
+    replacement: (_match, transport) => `miss the ${transport}`,
+    explanation: 'We say "miss the bus/train", not "lose". / Decimos "miss the bus", no "lose".',
+    category: 'vocabulary',
+    rule: 'Collocations with Miss vs Lose',
+    example: 'Hurry up or we will miss the train!',
+    why: '"Lose" significa extraviar un objeto físico; "miss" significa llegar tarde y no alcanzar un transporte o evento.',
+    how: 'Usa "miss the train/bus/flight".',
+    when: 'Al llegar tarde a un medio de transporte o espectáculo.',
+    whenNot: 'No uses "lose" para transportes o citas ("I lost the flight" significa que lo extraviaste).',
+    checkExercise: 'Traduce: "Si no corremos, perderemos el autobús."',
+  },
+  {
+    pattern: /\blook forward to hear\b/i,
+    replacement: 'look forward to hearing',
+    explanation: '"Look forward to" is followed by a gerund (-ing): "look forward to hearing".',
+    category: 'grammar',
+    rule: 'Preposition "to" followed by gerund',
+    example: 'I look forward to hearing from you soon.',
+    why: 'En la expresión "look forward to", la palabra "to" es una preposición, no parte de un infinitivo, por lo que exige gerundio (-ing) o sustantivo.',
+    how: 'Look forward to + verbo-ing / sustantivo (ej. "look forward to your reply").',
+    when: 'Al despedirte formal o amablemente en cartas, correos o conversaciones.',
+    whenNot: 'No uses infinitivo sin -ing tras "look forward to".',
+    checkExercise: 'Corrige: "I look forward to see you tomorrow."',
+  },
+  {
+    pattern: /\b(many|several|a lot of) informations\b/i,
+    replacement: 'a lot of information',
+    explanation: '"Information" is uncountable in English; it has no plural form "informations".',
+    category: 'vocabulary',
+    rule: 'Uncountable nouns',
+    example: 'Can you give me some information about the course?',
+    why: '"Information" es un sustantivo incontable; no se pluraliza añadiendo "-s".',
+    how: 'Usa "information", "some information" o "a piece of information".',
+    when: 'Al referirte a datos, noticias o detalles.',
+    whenNot: 'Nunca agregues "-s" a "information", "advice", "furniture" o "luggage".',
+    checkExercise: 'Corrige: "The guide gave us many useful informations."',
   },
 ];
 
@@ -114,6 +256,11 @@ export function createPedagogicalCorrection(userText: string): ChatCorrection | 
   let category: ChatCorrection['category'];
   let ruleName: string | undefined;
   let example: string | undefined;
+  let why: string | undefined;
+  let how: string | undefined;
+  let when: string | undefined;
+  let whenNot: string | undefined;
+  let checkExercise: string | undefined;
 
   for (const rule of CORRECTION_RULES) {
     if (rule.pattern.test(corrected)) {
@@ -125,6 +272,11 @@ export function createPedagogicalCorrection(userText: string): ChatCorrection | 
         category = rule.category;
         ruleName = rule.rule;
         example = rule.example;
+        why = rule.why;
+        how = rule.how;
+        when = rule.when;
+        whenNot = rule.whenNot;
+        checkExercise = rule.checkExercise;
       }
     }
   }
@@ -134,10 +286,14 @@ export function createPedagogicalCorrection(userText: string): ChatCorrection | 
     const trimmed = corrected.trim();
     corrected = `I${trimmed.slice(1)}`;
     if (!explanation) {
-      explanation = 'Remember to capitalize “I”. / Recuerda escribir “I” con mayúscula.';
+      explanation = 'Remember to capitalize "I". / Recuerda escribir "I" con mayúscula.';
       category = 'grammar';
       ruleName = 'Capitalization';
       example = 'I am practicing my languages.';
+      why = 'En inglés, el pronombre de primera persona "I" siempre se escribe con mayúscula, sin importar su posición.';
+      how = 'Escribe siempre "I", nunca "i" aislada.';
+      when = 'Siempre que uses el pronombre personal de primera persona singular.';
+      checkExercise = 'Escribe correctamente: "yesterday i saw a movie."';
     }
   } else if (/\bi\b/.test(corrected)) {
     corrected = corrected.replace(/\bi\b/g, 'I');
@@ -150,10 +306,47 @@ export function createPedagogicalCorrection(userText: string): ChatCorrection | 
       category,
       rule: ruleName,
       example,
-    };
+      why,
+      how,
+      when,
+      whenNot,
+      checkExercise,
+    } as any;
   }
 
   return undefined;
+}
+
+export function createFullPedagogicalCorrection(userText: string): PedagogicalCorrection | undefined {
+  const correction = createPedagogicalCorrection(userText);
+  if (!correction) return undefined;
+
+  const tipoErrorMap: Record<string, PedagogicalCorrection['tipoError']> = {
+    grammar: 'gramatica',
+    preposition: 'gramatica',
+    'verb-tense': 'gramatica',
+    vocabulary: 'vocabulario',
+    pronunciation: 'pronunciacion',
+  };
+
+  const tipo = tipoErrorMap[correction.category || 'grammar'] || 'gramatica';
+
+  return {
+    errorDetectado: userText,
+    tipoError: tipo,
+    correccion: correction.correctedText,
+    explicacionPorQue: correction.why || correction.explanation,
+    explicacionComo: correction.how || `Usa en su lugar: "${correction.correctedText}"`,
+    explicacionCuando: correction.when || 'En situaciones cotidianas y formales equivalentes.',
+    explicacionCuandoNo: correction.whenNot,
+    ejemplos: correction.example ? [correction.example] : [],
+    ejercicioComprobacion: correction.checkExercise || `Practica escribiendo: "${correction.correctedText}"`,
+    idiomaExplicacion: 'es',
+    gravedad: 'menor',
+    confianza: 'high',
+    debeInterrumpir: false,
+    textoParaVoz: `${correction.explanation}. Forma correcta: ${correction.correctedText}`,
+  };
 }
 
 export interface TutorReplyOptions {

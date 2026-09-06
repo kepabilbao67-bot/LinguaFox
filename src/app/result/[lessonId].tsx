@@ -11,10 +11,11 @@ function parseNonNegativeInteger(value: string | undefined): number | undefined 
 }
 
 export default function ResultRoute() {
-  const { lessonId, score, total } = useLocalSearchParams<{
+  const { lessonId, score, total, attemptId } = useLocalSearchParams<{
     lessonId?: string;
     score?: string;
     total?: string;
+    attemptId?: string;
   }>();
   const { progress } = useProgress();
 
@@ -23,6 +24,7 @@ export default function ResultRoute() {
       lesson={getLessonById(lessonId, progress.idiomaObjetivo)}
       score={parseNonNegativeInteger(score)}
       total={parseNonNegativeInteger(total)}
+      attemptId={attemptId}
     />
   );
 }
