@@ -1,15 +1,15 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { EmptyState } from '@/components/empty-state';
-import { ScreenContainer } from '@/components/screen-container';
 import { ErrorExplanationCard } from '@/components/ErrorExplanationCard';
+import { ScreenContainer } from '@/components/screen-container';
 import { AppColors } from '@/constants/app-theme';
-import { useTheme, type ThemeColors } from '@/theme/theme-context';
-import { useQuiz } from '@/hooks/use-quiz';
 import { useProgress } from '@/hooks/use-progress';
+import { useQuiz } from '@/hooks/use-quiz';
 import { speakText, stopSpeaking } from '@/services/speech';
+import { useTheme, type ThemeColors } from '@/theme/theme-context';
 import type { Lesson } from '@/types/learning';
 import type { PedagogicalCorrection } from '@/types/pedagogical-correction';
 
@@ -294,10 +294,12 @@ function createStyles(colors: ThemeColors) {
     listenButton: {
       backgroundColor: colors.surface,
       paddingHorizontal: 16,
-      paddingVertical: 8,
+      paddingVertical: 12,
       borderRadius: 99,
       borderWidth: 1,
       borderColor: colors.surfaceBorder,
+      minHeight: 44,
+      justifyContent: 'center',
     },
     listenText: { color: colors.text, fontSize: 13, fontWeight: '800' },
     audioFeedback: { color: colors.textMuted, fontSize: 12, textAlign: 'center' },
@@ -323,10 +325,12 @@ function createStyles(colors: ThemeColors) {
       borderRadius: 16,
       paddingVertical: 14,
       alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 48,
       marginTop: 6,
     },
     nextText: { color: '#FFFFFF', fontSize: 15, fontWeight: '900' },
-    backButton: { alignItems: 'center', paddingVertical: 10 },
+    backButton: { alignItems: 'center', paddingVertical: 12, minHeight: 44, justifyContent: 'center' },
     backText: { color: colors.textMuted, fontSize: 13, fontWeight: '600' },
     pressed: { opacity: 0.8 },
   });

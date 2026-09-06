@@ -598,6 +598,8 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: 13,
+    minHeight: 48,
+    justifyContent: 'center',
   },
   sendButtonDisabled: { backgroundColor: AppColors.disabled },
   sendButtonText: { color: AppColors.text, fontWeight: '900', fontSize: 15 },

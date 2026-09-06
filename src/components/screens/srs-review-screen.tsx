@@ -1,13 +1,13 @@
-import { router } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
 import { ScreenContainer } from '@/components/screen-container';
 import { AppColors } from '@/constants/app-theme';
-import { useProgress } from '@/hooks/use-progress';
-import { getDueCards, masteryLevel } from '@/utils/srs';
-import { speakText, stopSpeaking } from '@/services/speech';
 import { getLessonsByLanguage } from '@/data/lessons';
+import { useProgress } from '@/hooks/use-progress';
+import { speakText, stopSpeaking } from '@/services/speech';
 import type { SRSCard } from '@/types/learning';
+import { getDueCards, masteryLevel } from '@/utils/srs';
+import { router } from 'expo-router';
+import { useEffect, useMemo, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export function SRSReviewScreen() {
   const { progress, recordSRSReview } = useProgress();
@@ -291,7 +291,9 @@ const styles = StyleSheet.create({
   speedPill: {
     backgroundColor: AppColors.surfaceRaised,
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 8,
+    minHeight: 40,
+    justifyContent: 'center',
     borderRadius: 12,
     borderWidth: 1,
     borderColor: AppColors.surfaceBorder,
@@ -359,6 +361,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     borderRadius: 16,
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 100,
     borderWidth: 1,
     borderColor: AppColors.surfaceBorder,
     gap: 2,
@@ -439,6 +443,8 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 32,
     borderRadius: 16,
+    minHeight: 48,
+    justifyContent: 'center',
     marginTop: 12,
   },
   primaryButtonText: {

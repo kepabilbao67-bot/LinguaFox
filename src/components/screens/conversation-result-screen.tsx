@@ -1,9 +1,9 @@
-import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect } from 'react';
-import { Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
 import { ScreenContainer } from '@/components/screen-container';
 import { AppColors } from '@/constants/app-theme';
 import { useProgress } from '@/hooks/use-progress';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export function ConversationResultScreen() {
   const { addExperience } = useProgress();
@@ -134,6 +134,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingVertical: 15,
     alignItems: 'center',
+    minHeight: 48,
+    justifyContent: 'center',
   },
   primaryBtnText: { color: AppColors.text, fontWeight: '900', fontSize: 16 },
   secondaryActionBtn: {
@@ -141,6 +143,8 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 48,
     borderWidth: 1,
     borderColor: AppColors.surfaceBorder,
   },
@@ -150,6 +154,8 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 48,
     borderWidth: 1,
     borderColor: AppColors.surfaceBorder,
   },
