@@ -1,8 +1,9 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
 import { ScreenContainer } from '@/components/screen-container';
 import { AppColors } from '@/constants/app-theme';
+import { webScrollStyle } from '@/constants/web-styles';
 import { useProgress } from '@/hooks/use-progress';
 import { getScenariosForLanguage } from '@/data/scenarios';
 import type { Scenario } from '@/types/learning';
@@ -39,7 +40,11 @@ export function ScenariosScreen() {
 
   return (
     <ScreenContainer title="Escenarios y Roleplay" scrollable={false}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.mainScrollView}
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={true}
+      >
         {/* Banner */}
         <View style={styles.banner}>
           <Text style={styles.bannerIcon}>🎭</Text>
@@ -128,7 +133,11 @@ export function ScenariosScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { paddingBottom: 40, gap: 16 },
+  mainScrollView: {
+    flex: 1,
+    ...webScrollStyle,
+  },
+  container: { flexGrow: 1, paddingBottom: 40, gap: 16 },
   banner: {
     backgroundColor: AppColors.surfaceRaised,
     borderRadius: 20,

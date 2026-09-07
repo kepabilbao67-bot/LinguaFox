@@ -1,9 +1,10 @@
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
 
 import { ScreenContainer } from '@/components/screen-container';
 import { AppColors } from '@/constants/app-theme';
+import { webScrollStyle } from '@/constants/web-styles';
 import { useTheme, type ThemeColors } from '@/theme/theme-context';
 import { getLessonsByLanguage, getProgressKey } from '@/data/lessons';
 import { useProgress } from '@/hooks/use-progress';
@@ -95,7 +96,11 @@ export function HomeScreen() {
 
   return (
     <ScreenContainer title="LinguaFox" isLoading={!isHydrated} scrollable={false}>
-      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.mainScrollView}
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={true}
+      >
         {/* Top Header Bar: Language, Stats, Profile */}
         <View style={styles.topStatusRow}>
           <Pressable style={styles.languageButton} onPress={() => router.push('/language')}>
@@ -528,7 +533,11 @@ export function HomeScreen() {
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    scrollContainer: { paddingBottom: 40, gap: 14 },
+    mainScrollView: {
+      flex: 1,
+      ...webScrollStyle,
+    },
+    scrollContainer: { paddingBottom: 40, gap: 14, flexGrow: 1 },
     topStatusRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',

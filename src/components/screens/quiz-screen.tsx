@@ -1,11 +1,12 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { EmptyState } from '@/components/empty-state';
 import { ErrorExplanationCard } from '@/components/ErrorExplanationCard';
 import { ScreenContainer } from '@/components/screen-container';
 import { AppColors } from '@/constants/app-theme';
+import { webScrollStyle } from '@/constants/web-styles';
 import { useProgress } from '@/hooks/use-progress';
 import { useQuiz } from '@/hooks/use-quiz';
 import { speakText, stopSpeaking } from '@/services/speech';
@@ -128,7 +129,11 @@ export function QuizScreen({ lesson }: QuizScreenProps) {
 
   return (
     <ScreenContainer title={`Quiz · ${lesson.title}`} scrollable={false}>
-      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.mainScrollView}
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={true}
+      >
         {/* Progress header */}
         <View style={styles.headerRow}>
           <Text style={styles.meta}>
@@ -240,7 +245,11 @@ export function QuizScreen({ lesson }: QuizScreenProps) {
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    scrollContainer: { paddingBottom: 40, gap: 12 },
+    mainScrollView: {
+      flex: 1,
+      ...webScrollStyle,
+    },
+    scrollContainer: { paddingBottom: 40, gap: 12, flexGrow: 1 },
     headerRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',

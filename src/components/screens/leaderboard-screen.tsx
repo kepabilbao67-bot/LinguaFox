@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import React, { useMemo } from 'react';
 import {
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,6 +11,7 @@ import {
 
 import { ScreenContainer } from '@/components/screen-container';
 import { AppColors } from '@/constants/app-theme';
+import { webScrollStyle } from '@/constants/web-styles';
 import { useProgress } from '@/hooks/use-progress';
 import { useTheme, type ThemeColors } from '@/theme/theme-context';
 import {
@@ -48,8 +50,9 @@ export function LeaderboardScreen() {
   return (
     <ScreenContainer title="Ligas Semanales" isLoading={!isHydrated} scrollable={false}>
       <ScrollView
+        style={styles.mainScrollView}
         contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
       >
         {/* Tier Hero Header */}
         <View style={[styles.heroCard, { borderColor: tierConfig.color }]}>
@@ -253,9 +256,14 @@ export function LeaderboardScreen() {
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
+    mainScrollView: {
+      flex: 1,
+      ...webScrollStyle,
+    },
     scrollContainer: {
       paddingBottom: 40,
       gap: 16,
+      flexGrow: 1,
     },
     heroCard: {
       backgroundColor: colors.surfaceRaised,

@@ -1,9 +1,10 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppColors } from '@/constants/app-theme';
+import { webScrollStyle } from '@/constants/web-styles';
 import { CHARACTERS } from '@/data/characters';
 import type { Character } from '@/types/learning';
 
@@ -21,7 +22,11 @@ export function CharactersScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'right', 'bottom', 'left']}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.mainScrollView}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={true}
+      >
         {/* Header */}
         <View style={styles.header}>
           <Pressable style={styles.backBtn} onPress={() => router.back()}>
@@ -91,7 +96,19 @@ export function CharactersScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: AppColors.background },
-  content: { padding: 20, paddingBottom: 48, maxWidth: 720, width: '100%', alignSelf: 'center', gap: 16 },
+  mainScrollView: {
+    flex: 1,
+    ...webScrollStyle,
+  },
+  content: {
+    flexGrow: 1,
+    padding: 20,
+    paddingBottom: 48,
+    maxWidth: 720,
+    width: '100%',
+    alignSelf: 'center',
+    gap: 16,
+  },
   header: { gap: 6 },
   backBtn: { alignSelf: 'flex-start', paddingVertical: 4 },
   backText: { color: AppColors.primaryBright, fontWeight: '800', fontSize: 15 },

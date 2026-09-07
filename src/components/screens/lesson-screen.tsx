@@ -1,10 +1,11 @@
 import { router } from 'expo-router';
 import { useMemo, useState, useEffect } from 'react';
-import { Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
 
 import { EmptyState } from '@/components/empty-state';
 import { ScreenContainer } from '@/components/screen-container';
 import { AppColors } from '@/constants/app-theme';
+import { webScrollStyle } from '@/constants/web-styles';
 import { getProgressKey } from '@/data/lessons';
 import { useProgress } from '@/hooks/use-progress';
 import { isSpeechRecognitionAvailable, speakText, startRecognition, stopSpeaking } from '@/services/speech';
@@ -87,7 +88,11 @@ export function LessonScreen({ lesson }: LessonScreenProps) {
 
   return (
     <ScreenContainer title={lesson.title} isLoading={!isHydrated} scrollable={false}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.mainScrollView}
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={true}
+      >
         {/* Progress Bar Header */}
         <View style={styles.headerProgressRow}>
           <Text style={styles.progressText}>
@@ -199,7 +204,11 @@ export function LessonScreen({ lesson }: LessonScreenProps) {
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    container: { paddingBottom: 40, gap: 14 },
+    mainScrollView: {
+      flex: 1,
+      ...webScrollStyle,
+    },
+    container: { paddingBottom: 40, gap: 14, flexGrow: 1 },
     headerProgressRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',

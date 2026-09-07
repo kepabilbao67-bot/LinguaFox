@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
 import { ScreenContainer } from '@/components/screen-container';
 import { AppColors } from '@/constants/app-theme';
+import { webScrollStyle } from '@/constants/web-styles';
 import { useProgress } from '@/hooks/use-progress';
 import { speakText, stopSpeaking } from '@/services/speech';
 
@@ -196,7 +197,11 @@ export function PronunciationScreen() {
 
   return (
     <ScreenContainer title="Estudio de Pronunciación" scrollable={false}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.mainScrollView}
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={true}
+      >
         {/* Banner Hero */}
         <View style={styles.banner}>
           <Text style={styles.bannerIcon}>🎙️</Text>
@@ -316,7 +321,12 @@ export function PronunciationScreen() {
 }
 
 const styles = StyleSheet.create({
+  mainScrollView: {
+    flex: 1,
+    ...webScrollStyle,
+  },
   container: {
+    flexGrow: 1,
     padding: 16,
     paddingBottom: 40,
     gap: 16,

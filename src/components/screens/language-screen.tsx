@@ -1,8 +1,9 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppColors } from '@/constants/app-theme';
+import { webScrollStyle } from '@/constants/web-styles';
 import { useProgress } from '@/hooks/use-progress';
 import { getLessonsByLanguage } from '@/data/lessons';
 import type { LanguageCode } from '@/types/learning';
@@ -32,7 +33,11 @@ export function LanguageScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'right', 'bottom', 'left']}>
-      <ScrollView contentContainerStyle={styles.page}>
+      <ScrollView
+        style={styles.mainScrollView}
+        contentContainerStyle={styles.page}
+        showsVerticalScrollIndicator={true}
+      >
         <Pressable onPress={() => router.back()}>
           <Text style={styles.back}>‹ Volver</Text>
         </Pressable>
@@ -88,7 +93,11 @@ export function LanguageScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: AppColors.background },
-  page: { padding: 20, gap: 14, maxWidth: 720, width: '100%', alignSelf: 'center', paddingBottom: 60 },
+  mainScrollView: {
+    flex: 1,
+    ...webScrollStyle,
+  },
+  page: { flexGrow: 1, padding: 20, gap: 14, maxWidth: 720, width: '100%', alignSelf: 'center', paddingBottom: 60 },
   back: { color: AppColors.primaryBright, fontWeight: '800' },
   title: { color: AppColors.text, fontSize: 28, fontWeight: '900', marginTop: 10 },
   subtitle: { color: AppColors.textMuted, marginBottom: 12 },

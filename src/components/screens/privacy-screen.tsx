@@ -1,8 +1,9 @@
 import { router } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppColors } from '@/constants/app-theme';
+import { webScrollStyle } from '@/constants/web-styles';
 
 const LAST_UPDATED = '27 de agosto de 2026';
 const CONTACT_EMAIL = 'pedrobilbao93@gmail.com';
@@ -28,7 +29,11 @@ function Section({ title, children }: SectionProps) {
 export function PrivacyScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'right', 'bottom', 'left']}>
-      <ScrollView contentContainerStyle={styles.page}>
+      <ScrollView
+        style={styles.mainScrollView}
+        contentContainerStyle={styles.page}
+        showsVerticalScrollIndicator={true}
+      >
         <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Volver">
           <Text style={styles.back}>‹ Volver</Text>
         </Pressable>
@@ -140,7 +145,11 @@ export function PrivacyScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: AppColors.background },
-  page: { padding: 20, gap: 6, maxWidth: 720, width: '100%', alignSelf: 'center', paddingBottom: 60 },
+  mainScrollView: {
+    flex: 1,
+    ...webScrollStyle,
+  },
+  page: { flexGrow: 1, padding: 20, gap: 6, maxWidth: 720, width: '100%', alignSelf: 'center', paddingBottom: 60 },
   back: { color: AppColors.primaryBright, fontWeight: '800', marginBottom: 8 },
   title: { color: AppColors.text, fontSize: 26, fontWeight: '900', marginBottom: 2 },
   updated: { color: AppColors.textMuted, fontSize: 13, marginBottom: 20 },

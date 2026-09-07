@@ -1,5 +1,6 @@
 import { ScreenContainer } from '@/components/screen-container';
 import { AppColors } from '@/constants/app-theme';
+import { webScrollStyle } from '@/constants/web-styles';
 import { getLessonsByLanguage } from '@/data/lessons';
 import { useProgress } from '@/hooks/use-progress';
 import { speakText, stopSpeaking } from '@/services/speech';
@@ -7,7 +8,7 @@ import type { SRSCard } from '@/types/learning';
 import { getDueCards, masteryLevel } from '@/utils/srs';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export function SRSReviewScreen() {
   const { progress, recordSRSReview } = useProgress();
@@ -122,7 +123,11 @@ export function SRSReviewScreen() {
 
   return (
     <ScreenContainer title="Repaso Inteligente" scrollable={false}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.mainScrollView}
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={true}
+      >
         {/* Header Progress */}
         <View style={styles.headerRow}>
           <Text style={styles.counterText}>
@@ -209,10 +214,15 @@ export function SRSReviewScreen() {
 }
 
 const styles = StyleSheet.create({
+  mainScrollView: {
+    flex: 1,
+    ...webScrollStyle,
+  },
   container: {
     padding: 16,
     paddingBottom: 40,
     gap: 16,
+    flexGrow: 1,
   },
   headerRow: {
     flexDirection: 'row',

@@ -1,8 +1,9 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
 import { ScreenContainer } from '@/components/screen-container';
 import { AppColors } from '@/constants/app-theme';
+import { webScrollStyle } from '@/constants/web-styles';
 import { useProgress } from '@/hooks/use-progress';
 import { getErrorsForLanguage } from '@/data/error-bank';
 import { speakText } from '@/services/speech';
@@ -56,7 +57,11 @@ export function MyErrorsScreen() {
 
   return (
     <ScreenContainer title="Mis Errores" scrollable={false}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.mainScrollView}
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={true}
+      >
         {/* Header Hero */}
         <View style={styles.heroCard}>
           <Text style={styles.heroIcon}>💡</Text>
@@ -271,7 +276,11 @@ export function MyErrorsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { paddingBottom: 40, gap: 14 },
+  mainScrollView: {
+    flex: 1,
+    ...webScrollStyle,
+  },
+  container: { flexGrow: 1, paddingBottom: 40, gap: 14 },
   heroCard: {
     backgroundColor: AppColors.surfaceRaised,
     borderRadius: 20,

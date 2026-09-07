@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { ScreenContainer } from '@/components/screen-container';
 import { ACHIEVEMENTS, resolveMetricValue, type AchievementCategory, type AchievementMetric } from '@/data/achievements';
 import { useProgress } from '@/hooks/use-progress';
 import { AppColors } from '@/constants/app-theme';
+import { webScrollStyle } from '@/constants/web-styles';
 
 export function AchievementsScreen() {
   const { progress } = useProgress();
@@ -43,7 +44,11 @@ export function AchievementsScreen() {
 
   return (
     <ScreenContainer title="Logros y Trofeos" scrollable={false}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.mainScrollView}
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={true}
+      >
         {/* Banner Summary */}
         <View style={styles.heroCard}>
           <View style={styles.heroHeader}>
@@ -144,10 +149,15 @@ export function AchievementsScreen() {
 }
 
 const styles = StyleSheet.create({
+  mainScrollView: {
+    flex: 1,
+    ...webScrollStyle,
+  },
   container: {
     padding: 16,
     paddingBottom: 40,
     gap: 16,
+    flexGrow: 1,
   },
   heroCard: {
     backgroundColor: AppColors.surface,

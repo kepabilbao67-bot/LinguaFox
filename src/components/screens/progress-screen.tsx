@@ -1,9 +1,10 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
 
 import { ScreenContainer } from '@/components/screen-container';
 import { AppColors } from '@/constants/app-theme';
+import { webScrollStyle } from '@/constants/web-styles';
 import { useTheme, type ThemeColors } from '@/theme/theme-context';
 import { useProgress } from '@/hooks/use-progress';
 import { levelFromXp, xpIntoLevel } from '@/utils/rewards';
@@ -79,7 +80,11 @@ export function ProgressScreen() {
 
   return (
     <ScreenContainer title="Progreso y Marco CEFR" isLoading={!isHydrated} scrollable={false}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.mainScrollView}
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={true}
+      >
         {/* Global Progress Header Card */}
         <View style={styles.profileCard}>
           <Text style={styles.avatar}>🦊🎓</Text>
@@ -235,7 +240,11 @@ export function ProgressScreen() {
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    container: { paddingBottom: 40, gap: 16 },
+    mainScrollView: {
+      flex: 1,
+      ...webScrollStyle,
+    },
+    container: { paddingBottom: 40, gap: 16, flexGrow: 1 },
     profileCard: {
       backgroundColor: colors.surfaceRaised,
       borderRadius: 22,

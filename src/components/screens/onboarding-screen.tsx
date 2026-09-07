@@ -1,9 +1,10 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { AppColors } from '@/constants/app-theme';
+import { webScrollStyle } from '@/constants/web-styles';
 import { useProgress } from '@/hooks/use-progress';
 import { getLessonsByLanguage } from '@/data/lessons';
 import type { LanguageCode } from '@/types/learning';
@@ -44,7 +45,11 @@ export function OnboardingScreen() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <ScrollView contentContainerStyle={s.page}>
+      <ScrollView
+        style={s.mainScrollView}
+        contentContainerStyle={s.page}
+        showsVerticalScrollIndicator={true}
+      >
         <View style={s.coverContainer}>
           <Image source={COVER_IMAGE} style={s.coverBanner} contentFit="contain" />
         </View>
@@ -104,7 +109,11 @@ export function OnboardingScreen() {
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: AppColors.background },
-  page: { padding: 28, alignItems: 'center', justifyContent: 'center', gap: 20, maxWidth: 600, width: '100%', alignSelf: 'center', minHeight: '100%' },
+  mainScrollView: {
+    flex: 1,
+    ...webScrollStyle,
+  },
+  page: { flexGrow: 1, padding: 28, alignItems: 'center', justifyContent: 'center', gap: 20, maxWidth: 600, width: '100%', alignSelf: 'center', minHeight: '100%' },
   coverContainer: { width: '100%', height: 160, borderRadius: 16, overflow: 'hidden', backgroundColor: AppColors.surfaceRaised, alignItems: 'center', justifyContent: 'center' },
   coverBanner: { width: '100%', height: '100%' },
   title: { color: AppColors.text, fontSize: 28, fontWeight: '900', textAlign: 'center' },

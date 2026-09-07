@@ -1,10 +1,11 @@
+import { router } from 'expo-router';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { ScreenContainer } from '@/components/screen-container';
 import { AppColors } from '@/constants/app-theme';
+import { webScrollStyle } from '@/constants/web-styles';
 import { CITIES } from '@/data/cities';
 import { useProgress } from '@/hooks/use-progress';
 import type { CityAdventure } from '@/types/learning';
-import { router } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export function TravelScreen() {
   const { progress, unlockCity } = useProgress();
@@ -31,7 +32,11 @@ export function TravelScreen() {
 
   return (
     <ScreenContainer title="Viaje por el Mundo" scrollable={false}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.mainScrollView}
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={true}
+      >
         {/* Hero */}
         <View style={styles.heroCard}>
           <Text style={styles.heroIcon}>🌍</Text>
@@ -119,7 +124,11 @@ export function TravelScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { paddingBottom: 40, gap: 16 },
+  mainScrollView: {
+    flex: 1,
+    ...webScrollStyle,
+  },
+  container: { flexGrow: 1, paddingBottom: 40, gap: 16 },
   heroCard: {
     backgroundColor: AppColors.surfaceRaised,
     borderRadius: 20,

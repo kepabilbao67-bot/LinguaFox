@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppColors } from '@/constants/app-theme';
+import { webScrollStyle } from '@/constants/web-styles';
 import { getCharacterById } from '@/data/characters';
 import { getScenarioById } from '@/data/scenarios';
 import { useChatHistory } from '@/hooks/use-chat-history';
@@ -279,6 +280,7 @@ export function ChatScreen() {
               ref={scrollViewRef}
               style={styles.messages}
               contentContainerStyle={styles.messagesContent}
+              showsVerticalScrollIndicator={true}
               keyboardShouldPersistTaps="handled"
               onContentSizeChange={scrollToLatest}>
               {messages.map((message) => {
@@ -499,8 +501,18 @@ const styles = StyleSheet.create({
   speedPillActive: { backgroundColor: AppColors.primary },
   speedText: { color: AppColors.textMuted, fontSize: 11, fontWeight: '700' },
   speedTextActive: { color: AppColors.text, fontWeight: '800' },
-  messages: { flex: 1 },
-  messagesContent: { padding: 16, gap: 14, width: '100%', maxWidth: 720, alignSelf: 'center' },
+  messages: {
+    flex: 1,
+    ...webScrollStyle,
+  },
+  messagesContent: {
+    flexGrow: 1,
+    padding: 16,
+    gap: 14,
+    width: '100%',
+    maxWidth: 720,
+    alignSelf: 'center',
+  },
   bubbleRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
   tutorRow: { justifyContent: 'flex-start' },
   userRow: { justifyContent: 'flex-end' },

@@ -1,9 +1,10 @@
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
 
 import { ScreenContainer } from '@/components/screen-container';
 import { AppColors } from '@/constants/app-theme';
+import { webScrollStyle } from '@/constants/web-styles';
 import { useTheme, type ThemeColors } from '@/theme/theme-context';
 import { KIDS_TOPICS, type KidsTopic } from '@/data/kids-content';
 import { speakText, stopSpeaking } from '@/services/speech';
@@ -51,7 +52,11 @@ export function KidsScreen() {
 
   return (
     <ScreenContainer title="LinguaFox Kids 🦊" scrollable={false}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.mainScrollView}
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={true}
+      >
         {/* Top Kids Banner */}
         <View style={styles.kidsHeaderCard}>
           <View style={styles.kidsHeaderLeft}>
@@ -148,7 +153,11 @@ export function KidsScreen() {
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    container: { paddingBottom: 40, gap: 14 },
+    mainScrollView: {
+      flex: 1,
+      ...webScrollStyle,
+    },
+    container: { flexGrow: 1, paddingBottom: 40, gap: 14 },
     kidsHeaderCard: {
       backgroundColor: '#3B1E08',
       borderRadius: 22,

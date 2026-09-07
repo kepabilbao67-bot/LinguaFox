@@ -1,9 +1,10 @@
 import { router } from 'expo-router';
 import { useMemo } from 'react';
-import { Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
 
 import { ScreenContainer } from '@/components/screen-container';
 import { AppColors } from '@/constants/app-theme';
+import { webScrollStyle } from '@/constants/web-styles';
 import { useProgress } from '@/hooks/use-progress';
 import { useTheme, type ThemeColors } from '@/theme/theme-context';
 import { levelFromXp, xpIntoLevel } from '@/utils/rewards';
@@ -77,7 +78,11 @@ export function ProfileScreen() {
 
   return (
     <ScreenContainer title="Mi Perfil" isLoading={!isHydrated} scrollable={false}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.mainScrollView}
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={true}
+      >
         {/* Profile Card Header */}
         <View style={styles.profileHeaderCard}>
           <View style={styles.avatarContainer}>
@@ -257,7 +262,11 @@ export function ProfileScreen() {
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    container: { paddingBottom: 40, gap: 16 },
+    mainScrollView: {
+      flex: 1,
+      ...webScrollStyle,
+    },
+    container: { paddingBottom: 40, gap: 16, flexGrow: 1 },
     profileHeaderCard: {
       backgroundColor: colors.surfaceRaised,
       borderRadius: 24,

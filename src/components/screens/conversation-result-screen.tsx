@@ -1,9 +1,10 @@
 import { ScreenContainer } from '@/components/screen-container';
 import { AppColors } from '@/constants/app-theme';
+import { webScrollStyle } from '@/constants/web-styles';
 import { useProgress } from '@/hooks/use-progress';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export function ConversationResultScreen() {
   const { addExperience } = useProgress();
@@ -28,7 +29,11 @@ export function ConversationResultScreen() {
 
   return (
     <ScreenContainer title="Resumen de Conversación" scrollable={false}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.mainScrollView}
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={true}
+      >
         {/* Celebration Header */}
         <View style={styles.celebrationCard}>
           <Text style={styles.celebrationMascot}>🦊🎉</Text>
@@ -92,7 +97,11 @@ export function ConversationResultScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { paddingBottom: 40, gap: 16 },
+  mainScrollView: {
+    flex: 1,
+    ...webScrollStyle,
+  },
+  container: { flexGrow: 1, paddingBottom: 40, gap: 16 },
   celebrationCard: {
     backgroundColor: AppColors.surfaceRaised,
     borderRadius: 24,
