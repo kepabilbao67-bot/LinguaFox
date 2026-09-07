@@ -109,7 +109,7 @@ export function SRSReviewScreen() {
             </View>
           </View>
 
-          <Pressable style={styles.primaryButton} onPress={() => router.replace('/(tabs)')}>
+          <Pressable style={styles.primaryButton} onPress={() => router.replace('/')}>
             <Text style={styles.primaryButtonText}>Volver al Inicio</Text>
           </Pressable>
         </View>
