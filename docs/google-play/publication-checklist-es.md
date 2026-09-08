@@ -54,15 +54,20 @@ Guía secuencial para el proceso completo de lanzamiento de LinguaFox en Google 
 ---
 
 ## Fase 3: Compilación del Paquete de Producción (Android App Bundle / AAB)
-- [ ] Generar el archivo `.aab` de producción optimizado para Google Play.
-- [ ] Verificar que el paquete esté firmado con el keystore de lanzamiento oficial (Play App Signing).
-- [ ] Comprobar que `versionCode` sea incremental y `targetSdkVersion` sea la requerida por Google (API 34/35/36).
+- [x] Configuración del pipeline automático en GitHub Actions (`.github/workflows/build-android.yml`).
+- [x] Keystore oficial EAS integrada mediante secretos cifrados en GitHub.
+- [x] Inyección automática de firma Release (`signingConfigs.release`) mediante Config Plugin Expo.
+- [x] `versionCode: 4` e incremento continuo asegurado.
+- [x] Verificación criptográfica automática del certificado SHA-256 (`37:38:1D:5F:...`).
+- [x] Generación del artefacto `LinguaFox-Release.aab`.
 
 ---
 
 ## Fase 4: Creación de la Versión y Envío a Revisión
-- [ ] Crear un nuevo lanzamiento en la pista seleccionada (Producción o Prueba Cerrada).
-- [ ] Subir el archivo `.aab`.
-- [ ] Pegar las notas de la versión en español desde `release-notes-1.0.0-es.md`.
-- [ ] Revisar el informe previo al lanzamiento (*Pre-launch Report*) de Google Play.
-- [ ] Enviar la versión a revisión formal por parte de Google.
+- [ ] Subida a **Internal Testing**:
+  - Automática mediante GitHub Actions una vez configurado el secreto `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON`.
+  - O manual descargando el artefacto `LinguaFox-Release.aab` desde GitHub Actions.
+- [ ] Pegar las notas de la versión en español desde `docs/google-play/release-notes-1.0.1-es.md`.
+- [ ] Probar la versión con el grupo de probadores internos.
+- [ ] Promocionar a Producción cuando Kepa dé la autorización explícita.
+

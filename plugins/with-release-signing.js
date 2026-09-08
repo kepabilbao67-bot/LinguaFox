@@ -7,7 +7,7 @@ function modifyAppBuildGradle(buildGradle) {
             def keystorePath = System.getenv("ANDROID_KEYSTORE_PATH") ?: System.getenv("KEYSTORE_FILE") ?: "release.keystore"
             storeFile file(keystorePath)
             storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: System.getenv("KEYSTORE_PASSWORD") ?: ""
-            keyAlias System.getenv("ANDROID_KEY_ALIAS") ?: System.getenv("KEY_ALIAS") ?: ""
+            keyAlias System.getenv("ANDROID_KEY_ALIAS") ?: System.getenv("KEY_ALIAS") ?: "4f35f0d45175cfb1d4670be98e6f46cb"
             keyPassword System.getenv("ANDROID_KEY_PASSWORD") ?: System.getenv("KEY_PASSWORD") ?: ""
         }
 `;

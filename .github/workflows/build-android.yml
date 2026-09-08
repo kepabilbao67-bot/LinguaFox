@@ -52,17 +52,29 @@ jobs:
       - name: 🔧 Configuración Android (Release Signing)
         run: node scripts/configure-android-signing.js
 
-      - name: 🔐 Reconstrucción segura de Keystore
+      - name: 🔐 Reconstrucción y Verificación de Keystore
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/release.keystore
           chmod 600 android/app/release.keystore
+
+          FILE_SIZE=$(wc -c < android/app/release.keystore)
+          echo "✅ Keystore reconstruida: $FILE_SIZE bytes"
+          if [ "$FILE_SIZE" -lt 500 ]; then
+            echo "❌ ERROR: Keystore inválida o vacía."
+            exit 1
+          fi
+
+          export KS_PASS="${{ secrets.ANDROID_KEYSTORE_PASSWORD }}"
+          export KEY_ALIAS_VAL="${{ secrets.ANDROID_KEY_ALIAS || '4f35f0d45175cfb1d4670be98e6f46cb' }}"
+          keytool -list -keystore android/app/release.keystore -storepass:env KS_PASS -alias "$KEY_ALIAS_VAL"
+          echo "✅ Keystore y alias validados con éxito por keytool antes de compilar."
 
       - name: 🔨 Build Android App Bundle (AAB Release)
         working-directory: android
         env:
           ANDROID_KEYSTORE_PATH: release.keystore
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS || '4f35f0d45175cfb1d4670be98e6f46cb' }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           chmod +x gradlew
