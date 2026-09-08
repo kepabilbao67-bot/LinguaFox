@@ -131,6 +131,7 @@ jobs:
           releaseFiles: LinguaFox-Release.aab
           track: internal
           status: completed
+          changesNotSentForReview: true
 
       - name: ℹ️ Aviso Estado Google Play API
         if: success() && env.PLAY_SECRET == ''
