@@ -2,7 +2,7 @@
   "expo": {
     "name": "LinguaFox",
     "slug": "LinguaFox",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "linguafox",
@@ -21,7 +21,7 @@
         "backgroundColor": "#FFFFFF"
       },
       "package": "com.kepabilbao.linguafox",
-      "versionCode": 1
+      "versionCode": 4
     },
     "web": {
       "bundler": "metro",
@@ -29,6 +29,7 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "./plugins/with-release-signing.js",
       "expo-router",
       [
         "expo-splash-screen",

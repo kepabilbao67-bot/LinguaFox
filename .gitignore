@@ -13,12 +13,20 @@ expo-env.d.ts
 .kotlin/
 *.orig.*
 *.jks
+*.keystore
 *.p8
 *.p12
 *.key
 *.mobileprovision
 *.apk
 *.aab
+
+# Credentials and secrets
+credentials.json
+credentials/
+release.keystore
+artifacts/
+
 
 # Metro
 .metro-health-check*
